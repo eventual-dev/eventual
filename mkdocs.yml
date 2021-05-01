@@ -1,0 +1,6 @@
+site_name: Gum
+nav:
+    - Home: index.md
+    - Guarantees: guarantees.md
+    - Retry Behavior: retry_behavior.md
+theme: material
