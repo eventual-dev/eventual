@@ -1,7 +1,7 @@
 import uuid
 from typing import TypeVar, Iterable, Optional, Generic, Dict
 
-from eventual.repo import (
+from eventual.repository import (
     RepositoryAllMixin,
     RepositoryCountMixin,
     RepositoryGetMixin,

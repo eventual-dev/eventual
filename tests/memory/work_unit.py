@@ -13,7 +13,7 @@ class MemoryWorkUnit(WorkUnit):
 
 
 @contextlib.asynccontextmanager
-async def memory_unit_of_work() -> AsyncGenerator[MemoryWorkUnit, None]:
+async def create_work_unit() -> AsyncGenerator[MemoryWorkUnit, None]:
     try:
         uow = MemoryWorkUnit()
         yield uow

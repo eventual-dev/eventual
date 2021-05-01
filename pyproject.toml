@@ -6,13 +6,12 @@ authors = ["Ivan Dmitriesvkii <ivan.dmitrievsky@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-tortoise-orm = { extras = ["asyncpg"], version = "^0.17.2" }
-orjson = "^3.5.2"
-aio-pika = "^6.8.0"
 eventual-rmq = { version = "^0", optional = true }
+eventual-tortoise = { version = "^0", optional = true }
 
 [tool.poetry.extras]
 rmq = ["eventual-rmq"]
+tortoise = ["eventual-tortoise"]
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
