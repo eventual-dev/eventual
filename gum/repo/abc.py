@@ -2,7 +2,7 @@ import abc
 from typing import Iterable, TypeVar, Generic, Optional
 import uuid
 
-from .model import Entity
+from gum.model import Entity
 
 M = TypeVar("M", bound=Entity)
 

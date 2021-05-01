@@ -1,4 +1,4 @@
-from typing import AsyncIterable, AsyncGenerator
+from typing import AsyncIterable, AsyncGenerator, Optional, Callable
 
 import aio_pika
 import orjson

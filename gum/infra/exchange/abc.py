@@ -84,6 +84,9 @@ class EventStorage(abc.ABC):
             # Make a copy because during asynchronous processing
             # someone can add messages to the outbox.
             event_seq = entity.clear_outbox()
+            # One may think that the order, in which the events are written here,
+            # is important for sourcing the events later. In reality every event has a timestamp, which dictates
+            # its position in the sequence.
             for event in event_seq:
                 await self.schedule_event_out(
                     event_id=event.id, body=event.encode_body()
