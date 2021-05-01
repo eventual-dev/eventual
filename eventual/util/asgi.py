@@ -1,17 +1,17 @@
 import asyncio
 
-from eventual.infra.exchange.abc import (
-    EventStorage,
+from eventual.dispatch import (
+    EventStore,
     MessageDispatcher,
-    MessageExchange,
+    MessageBroker,
 )
 
 
 def register_eventual(
     app,
-    message_exchange: MessageExchange,
+    message_exchange: MessageBroker,
     message_dispatcher: MessageDispatcher,
-    event_storage: EventStorage,
+    event_storage: EventStore,
 ):
     task_from_name = dict()
 

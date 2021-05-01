@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from eventual import util
-from eventual.infra.exchange.abc import (
-    EventStorage,
+from eventual.dispatch import (
+    EventStore,
     EventBody,
     Message,
     ProcessingGuarantee,
@@ -19,7 +19,7 @@ from eventual.infra.uow import tortoise_unit_of_work
 from eventual.model import Entity
 
 
-class RelationalEventStorage(EventStorage):
+class RelationalEventStore(EventStore):
     @asynccontextmanager
     async def clear_outbox_atomically(
         self, *entity_seq: Entity

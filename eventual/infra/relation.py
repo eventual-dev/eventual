@@ -5,7 +5,7 @@ from tortoise import fields, Model
 from tortoise.indexes import Index
 
 from eventual.infra import mixin
-from eventual.infra.exchange.abc import ProcessingGuarantee
+from eventual.dispatch import ProcessingGuarantee
 
 
 class PkUuidModel(Model):

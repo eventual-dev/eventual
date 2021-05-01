@@ -3,8 +3,6 @@ import datetime as dt
 import enum
 import uuid
 from typing import (
-    Any,
-    Dict,
     AsyncContextManager,
     List,
     Iterable,
@@ -31,7 +29,7 @@ class Message(abc.ABC):
         return self.body["id"]
 
 
-class MessageExchange(abc.ABC):
+class MessageBroker(abc.ABC):
     @abc.abstractmethod
     async def send_event_body_stream(self, event_body_stream: AsyncIterable[EventBody]):
         raise NotImplementedError
@@ -47,7 +45,7 @@ class MessageDispatcher(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def dispatch_from_exchange(self, message_exchange: MessageExchange):
+    async def dispatch_from_exchange(self, message_exchange: MessageBroker):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -74,7 +72,7 @@ class ProcessingGuarantee(str, enum.Enum):
     AT_LEAST_ONCE = "AT_LEAST_ONCE"
 
 
-class EventStorage(abc.ABC):
+class EventStore(abc.ABC):
     @abc.abstractmethod
     def clear_outbox_atomically(self, *entity_seq: Entity) -> AsyncContextManager[None]:
         raise NotImplementedError

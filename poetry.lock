@@ -129,6 +129,17 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
+name = "eventual-rmq"
+version = "0.1.0"
+description = ""
+category = "main"
+optional = true
+python-versions = ">=3.8,<4.0"
+
+[package.dependencies]
+eventual = ">=0.2.0,<0.3.0"
+
+[[package]]
 name = "future"
 version = "0.18.2"
 description = "Clean single-source support for Python 3 and 2"
@@ -599,7 +610,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "13e304aa9f608d030b4b67575498f8b4cf8a3cba3586dff19756c716e42d8e82"
+content-hash = "d524320b69a92f33968b354ed7e680cb1d13e8d4d6795eabb42742a6abefa4bf"
 
 [metadata.files]
 aio-pika = [
@@ -657,6 +668,10 @@ click = [
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
+]
+eventual-rmq = [
+    {file = "eventual-rmq-0.1.0.tar.gz", hash = "sha256:c6cda881e8a4ec1cc7cd5bd44cae42ffac1c03373c1136a9e426efd6cf6c3e29"},
+    {file = "eventual_rmq-0.1.0-py3-none-any.whl", hash = "sha256:47251cd75c277183a18e82a3865a972f6ccdeb674141e91a2b928672db9a0dbd"},
 ]
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},

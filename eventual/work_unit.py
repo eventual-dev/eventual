@@ -2,11 +2,11 @@ import abc
 from typing import Callable, AsyncContextManager
 
 
-class WorkInterrupted(Exception):
+class InterruptWork(Exception):
     pass
 
 
-class UnitOfWork(abc.ABC):
+class WorkUnit(abc.ABC):
     def __init__(self):
         self.was_committed = False
 
@@ -15,4 +15,4 @@ class UnitOfWork(abc.ABC):
         raise NotImplementedError
 
 
-UnitOfWorkFactory = Callable[[], AsyncContextManager[UnitOfWork]]
+WorkUnitFactory = Callable[[], AsyncContextManager[WorkUnit]]

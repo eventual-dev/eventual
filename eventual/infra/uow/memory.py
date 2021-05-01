@@ -1,22 +1,22 @@
 import contextlib
 from typing import AsyncGenerator
 
-from .abc import UnitOfWork, WorkInterrupted
+from eventual.work_unit import WorkUnit, InterruptWork
 
 
-class MemoryUnitOfWork(UnitOfWork):
+class MemoryWorkUnit(WorkUnit):
     def __init__(self):
         super().__init__()
 
     async def rollback(self):
-        raise WorkInterrupted
+        raise InterruptWork
 
 
 @contextlib.asynccontextmanager
-async def memory_unit_of_work() -> AsyncGenerator[MemoryUnitOfWork, None]:
+async def memory_unit_of_work() -> AsyncGenerator[MemoryWorkUnit, None]:
     try:
-        uow = MemoryUnitOfWork()
+        uow = MemoryWorkUnit()
         yield uow
         uow.was_committed = True
-    except WorkInterrupted:
+    except InterruptWork:
         pass

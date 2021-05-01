@@ -4,11 +4,11 @@ import uuid
 from typing import AsyncIterable, Awaitable, Callable, Dict, List
 
 from eventual import util
-from eventual.infra.exchange.abc import (
-    EventStorage,
+from eventual.dispatch import (
+    EventStore,
     Message,
     MessageDispatcher,
-    MessageExchange,
+    MessageBroker,
 )
 
 
@@ -39,7 +39,7 @@ async def _wait_and_pop(
 
 
 class ConcurrentMessageDispatcher(MessageDispatcher):
-    def __init__(self, event_storage: EventStorage, delay_on_exc: float):
+    def __init__(self, event_storage: EventStore, delay_on_exc: float):
         self.event_storage = event_storage
         self.delay_on_exc = delay_on_exc
 
@@ -57,7 +57,7 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
                 )
             self.fn_from_message_type[event_type] = fn
 
-    async def dispatch_from_exchange(self, message_exchange: MessageExchange):
+    async def dispatch_from_exchange(self, message_exchange: MessageBroker):
         while True:
             message_stream = await message_exchange.message_stream()
             self.interrupt_dispatch = False
