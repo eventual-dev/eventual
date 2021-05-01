@@ -5,7 +5,7 @@ from tortoise import fields, Model
 from tortoise.indexes import Index
 
 from eventual.infra import mixin
-from eventual.dispatch import ProcessingGuarantee
+from eventual.dispatch.abc import Guarantee
 
 
 class PkUuidModel(Model):
@@ -42,7 +42,7 @@ class DispatchedEventRelation(Model, mixin.Timestamp):
 
 class HandledEventRelation(PkUuidModel, mixin.Timestamp):
     body = fields.JSONField(encoder=_dump_str, decoder=orjson.loads)
-    guarantee = fields.CharEnumField(ProcessingGuarantee)
+    guarantee = fields.CharEnumField(Guarantee)
 
     class Meta:
         table = "handled_event"

@@ -1,15 +1,37 @@
 import asyncio
 import datetime as dt
 import uuid
-from typing import AsyncIterable, Awaitable, Callable, Dict, List
+from typing import (
+    AsyncContextManager,
+    AsyncIterable,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Tuple,
+)
 
-from eventual import util
-from eventual.dispatch import (
+from .abc import (
     EventStore,
+    Guarantee,
     Message,
     MessageDispatcher,
     MessageBroker,
 )
+from eventual import util
+from ..model import EventBody
+
+
+def _manager_from_guarantee(
+    msg: Message, event_store: EventStore, guarantee: Guarantee
+) -> AsyncContextManager[EventBody]:
+    if guarantee == guarantee.AT_LEAST_ONCE:
+        return event_store.handle_at_least_once(msg)
+    if guarantee == guarantee.EXACTLY_ONCE:
+        return event_store.handle_exactly_once(msg)
+    if guarantee == guarantee.NO_MORE_THAN_ONCE:
+        return event_store.handle_no_more_than_once(msg)
+    raise AssertionError("there are no more guarantees")
 
 
 async def _wait_and_pop(
@@ -17,13 +39,16 @@ async def _wait_and_pop(
     unique_task_id: uuid.UUID,
     fn: Callable[[Message], Awaitable[None]],
     message: Message,
+    guarantee: Guarantee,
+    delay_on_exc: float,
 ):
     try:
-        await fn(message)
+        async with _manager_from_guarantee(
+            message, message_dispatcher.event_storage, guarantee
+        ):
+            await fn(message)
     except Exception as e:
-        send_after = util.tz_aware_utcnow() + dt.timedelta(
-            seconds=message_dispatcher.delay_on_exc
-        )
+        send_after = util.tz_aware_utcnow() + dt.timedelta(seconds=delay_on_exc)
         body = message.body
         await message_dispatcher.event_storage.schedule_event_out(
             body["id"],
@@ -33,7 +58,7 @@ async def _wait_and_pop(
         # TODO: Make sure that no as few messages as possible get stuck in a sent/rejected loop.
         # This should not violate any guarantees, but can possibly create a lot of messages.
         message.acknowledge()
-        print(e)
+        raise
     finally:
         _ = message_dispatcher.task_from_id.pop(unique_task_id)
 
@@ -43,19 +68,27 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
         self.event_storage = event_storage
         self.delay_on_exc = delay_on_exc
 
-        self.fn_from_message_type: Dict[str, Callable[[Message], Awaitable[None]]] = {}
+        self.fn_from_message_type: Dict[
+            str, Tuple[Callable[[Message], Awaitable[None]], Guarantee, float]
+        ] = {}
         self.task_from_id: Dict[uuid.UUID, asyncio.Task] = {}
 
     def register(
-        self, event_type_seq: List[str], fn: Callable[[Message], Awaitable[None]]
+        self,
+        event_type_seq: List[str],
+        fn: Callable[[Message], Awaitable[None]],
+        guarantee: Guarantee,
+        delay_on_exc: float,
     ):
+        if delay_on_exc <= 0:
+            raise ValueError("delay has to be non-negative")
         for event_type in event_type_seq:
             if event_type in self.fn_from_message_type:
                 # TODO: Change error type to something more appropriate.
                 raise ValueError(
                     "it is not possible to register multiple functions to handle the same event type"
                 )
-            self.fn_from_message_type[event_type] = fn
+            self.fn_from_message_type[event_type] = (fn, guarantee, delay_on_exc)
 
     async def dispatch_from_exchange(self, message_exchange: MessageBroker):
         while True:
@@ -79,28 +112,25 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
                     message.acknowledge()
                     continue
 
-                if (
-                    fn := self.fn_from_message_type.get(event_body["type"])
-                ) is not None:
-                    # We save every event that we attempt to dispatch, not every event we receive,
-                    # because we can get a lot of events that we do not care about.
-                    await self.event_storage.mark_event_dispatched(event_body)
+                triplet = self.fn_from_message_type.get(event_body["type"])
+                if triplet is None:
+                    continue
 
-                    # We want to remove tasks from `self.task_from_id` upon their completion.
-                    # To do that we have to associate each one with a unique key. Such a key
-                    # should be unique for every task, so we can't use a message id -
-                    # during the handling of a message we can get the same message again.
-                    # For now we've settled on a uuid, but it's certainly not the fastest option.
-                    unique_id = uuid.uuid4()
-                    task = asyncio.create_task(
-                        _wait_and_pop(
-                            self,
-                            unique_id,
-                            fn,
-                            message,
-                        )
-                    )
-                    self.task_from_id[unique_id] = task
+                fn, guarantee, delay_on_exc = triplet
+                # We save every event that we attempt to dispatch, not every event we receive,
+                # because we can get a lot of events that we do not care about.
+                await self.event_storage.mark_event_dispatched(event_body)
+
+                # We want to remove tasks from `self.task_from_id` upon their completion.
+                # To do that we have to associate each one with a unique key. Such a key
+                # should be unique for every task, so we can't use a message id -
+                # during the handling of a message we can get the same message again.
+                # For now we've settled on a uuid, but it's certainly not the fastest option.
+                unique_id = uuid.uuid4()
+                task = asyncio.create_task(
+                    _wait_and_pop(self, unique_id, fn, message, guarantee, delay_on_exc)
+                )
+                self.task_from_id[unique_id] = task
         except asyncio.CancelledError as e:
             pass
         except Exception as e:

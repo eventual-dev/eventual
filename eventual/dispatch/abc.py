@@ -39,6 +39,12 @@ class MessageBroker(abc.ABC):
         raise NotImplementedError
 
 
+class Guarantee(str, enum.Enum):
+    NO_MORE_THAN_ONCE = "NO_MORE_THAN_ONCE"
+    EXACTLY_ONCE = "EXACTLY_ONCE"
+    AT_LEAST_ONCE = "AT_LEAST_ONCE"
+
+
 class MessageDispatcher(abc.ABC):
     @abc.abstractmethod
     async def dispatch_from_stream(self, message_stream: AsyncIterable[Message]):
@@ -50,26 +56,27 @@ class MessageDispatcher(abc.ABC):
 
     @abc.abstractmethod
     def register(
-        self, event_type_seq: List[str], fn: Callable[[Message], Awaitable[None]]
+        self,
+        event_type_seq: List[str],
+        fn: Callable[[Message], Awaitable[None]],
+        guarantee: Guarantee,
+        delay_on_exc: float,
     ):
         raise NotImplementedError
 
     def subscribe(
-        self, event_type_seq: List[str]
+        self,
+        event_type_seq: List[str],
+        guarantee: Guarantee = Guarantee.AT_LEAST_ONCE,
+        delay_on_exc: float = 1.0,
     ) -> Callable[
         [Callable[[Message], Awaitable[None]]], Callable[[Message], Awaitable[None]]
     ]:
         def decorator(fn: Callable[[Message], Awaitable[None]]):
-            self.register(event_type_seq, fn)
+            self.register(event_type_seq, fn, guarantee, delay_on_exc)
             return fn
 
         return decorator
-
-
-class ProcessingGuarantee(str, enum.Enum):
-    NO_MORE_THAN_ONCE = "NO_MORE_THAN_ONCE"
-    EXACTLY_ONCE = "EXACTLY_ONCE"
-    AT_LEAST_ONCE = "AT_LEAST_ONCE"
 
 
 class EventStore(abc.ABC):
@@ -109,7 +116,7 @@ class EventStore(abc.ABC):
     async def mark_event_handled(
         self,
         event_body: EventBody,
-        guarantee: ProcessingGuarantee,
+        guarantee: Guarantee,
     ) -> uuid.UUID:
         raise NotImplementedError
 

@@ -1,6 +1,6 @@
 import asyncio
 
-from eventual.dispatch import (
+from eventual.dispatch.abc import (
     EventStore,
     MessageDispatcher,
     MessageBroker,

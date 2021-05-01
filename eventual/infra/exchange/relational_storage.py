@@ -1,14 +1,15 @@
 import asyncio
-import uuid
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+import datetime as dt
+import uuid
+from typing import AsyncGenerator, Optional
 
 from eventual import util
-from eventual.dispatch import (
+from eventual.dispatch.abc import (
     EventStore,
     EventBody,
     Message,
-    ProcessingGuarantee,
+    Guarantee,
 )
 from eventual.infra.relation import (
     EventOutRelation,
@@ -29,7 +30,7 @@ class RelationalEventStore(EventStore):
             await self.clear_outbox(entity_seq)
 
     async def schedule_event_out(
-        self, event_id: uuid.UUID, body: EventBody, send_after: bool = False
+        self, event_id: uuid.UUID, body: EventBody, send_after: Optional[dt.datetime] = None
     ):
         await EventOutRelation.create(
             event_id=event_id, body=body, send_after=send_after
@@ -40,7 +41,7 @@ class RelationalEventStore(EventStore):
         return event_count > 0
 
     async def mark_event_handled(
-        self, event_body: EventBody, guarantee: ProcessingGuarantee
+        self, event_body: EventBody, guarantee: Guarantee
     ) -> uuid.UUID:
         event_id = event_body["id"]
         await HandledEventRelation.create(
@@ -60,7 +61,7 @@ class RelationalEventStore(EventStore):
         async with tortoise_unit_of_work():
             yield message.body
             await self.mark_event_handled(
-                message.body, guarantee=ProcessingGuarantee.EXACTLY_ONCE
+                message.body, guarantee=Guarantee.EXACTLY_ONCE
             )
         message.acknowledge()
 
@@ -69,7 +70,7 @@ class RelationalEventStore(EventStore):
         self, message: Message
     ) -> AsyncGenerator[EventBody, None]:
         await self.mark_event_handled(
-            message.body, guarantee=ProcessingGuarantee.NO_MORE_THAN_ONCE
+            message.body, guarantee=Guarantee.NO_MORE_THAN_ONCE
         )
         message.acknowledge()
         yield message.body
@@ -80,7 +81,7 @@ class RelationalEventStore(EventStore):
     ) -> AsyncGenerator[EventBody, None]:
         yield message.body
         await self.mark_event_handled(
-            message.body, guarantee=ProcessingGuarantee.AT_LEAST_ONCE
+            message.body, guarantee=Guarantee.AT_LEAST_ONCE
         )
         message.acknowledge()
 
