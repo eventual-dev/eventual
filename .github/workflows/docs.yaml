@@ -1,0 +1,60 @@
+name: Docs deployment
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2.3.1
+
+      - name: Set up Python 🐍
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Build docs 🏗
+        run: |
+          pip install poetry
+          poetry install
+          mkdocs build
+        env:
+          POETRY_VIRTUALENVS_CREATE: false
+
+      - name: Publish docs to Pages 🧐 [prod]
+        if: github.ref == 'refs/heads/master'
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          branch: gh-pages
+          folder: site
+
+      - name: Publish to Surge 🧐 [preview]
+        id: publish-preview
+        if: github.event_name == 'pull_request'
+        env:
+          SURGE_LOGIN: dev@eventual.com
+          SURGE_TOKEN: 5ed7fcac90fac92170a28e638c01219b
+        run: |
+          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          deploy_host="${pr_number}-eventual-review.surge.sh"
+          npx surge site $deploy_host
+          echo "::set-output name=deploy-url::https://$deploy_host"
+
+      - name: Find Comment 🔎
+        id: find-comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+
+      - name: Create comment ✨
+        if: ${{ github.event_name == 'pull_request' && steps.find-commend.outputs.comment-id == ''}}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            This is a preview version of docs: ${{ steps.publish-preview.outputs.deploy-url }}
