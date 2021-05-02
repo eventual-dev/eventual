@@ -1,5 +1,5 @@
 import abc
-from typing import Callable, AsyncContextManager
+from typing import AsyncContextManager, Callable
 
 
 class InterruptWork(Exception):

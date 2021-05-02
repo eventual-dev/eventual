@@ -1,6 +1,6 @@
 import abc
-from typing import Iterable, TypeVar, Generic, Optional
 import uuid
+from typing import Generic, Iterable, Optional, TypeVar
 
 from eventual.model import Entity
 

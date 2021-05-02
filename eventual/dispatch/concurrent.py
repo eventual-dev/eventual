@@ -11,15 +11,10 @@ from typing import (
     Tuple,
 )
 
-from .abc import (
-    EventStore,
-    Guarantee,
-    Message,
-    MessageDispatcher,
-    MessageBroker,
-)
 from eventual import util
+
 from ..model import EventBody
+from .abc import EventStore, Guarantee, Message, MessageBroker, MessageDispatcher
 
 
 def _manager_from_guarantee(
@@ -47,7 +42,7 @@ async def _wait_and_pop(
             message, message_dispatcher.event_storage, guarantee
         ):
             await fn(message)
-    except Exception as e:
+    except Exception:
         send_after = util.tz_aware_utcnow() + dt.timedelta(seconds=delay_on_exc)
         body = message.body
         await message_dispatcher.event_storage.schedule_event_out(
@@ -60,7 +55,7 @@ async def _wait_and_pop(
         message.acknowledge()
         raise
     finally:
-        _ = message_dispatcher.task_from_id.pop(unique_task_id)
+        del message_dispatcher.task_from_id[unique_task_id]
 
 
 class ConcurrentMessageDispatcher(MessageDispatcher):
@@ -133,9 +128,9 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
                     _wait_and_pop(self, unique_id, fn, message, guarantee, delay_on_exc)
                 )
                 self.task_from_id[unique_id] = task
-        except asyncio.CancelledError as e:
+        except asyncio.CancelledError:
             pass
-        except Exception as e:
+        except Exception:
             # TODO: Add logging here to signal that we are shutting down.
             raise
         finally:

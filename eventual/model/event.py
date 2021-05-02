@@ -1,8 +1,8 @@
 import dataclasses
 import datetime as dt
 import re
-from typing import Dict, Any
 import uuid
+from typing import Any, Dict
 
 from eventual import util
 

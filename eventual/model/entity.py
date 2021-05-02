@@ -40,7 +40,7 @@ class NoPublicConstructor(BaseMeta):
     - TypeError if a sub class or an instance is created.
     """
 
-    def __call__(cls, *args, **kwargs):
+    def __call__(cls: typing.Type[T], *args: typing.Any, **kwargs: typing.Any) -> T:
         raise TypeError(
             f"{cls.__module__}.{cls.__qualname__} has no public constructor"
         )

@@ -1,7 +1,8 @@
 # import asyncio
 
-import pytest
-from tortoise.contrib.test import finalizer, initializer
+# import pytest
+# from _pytest.fixtures import FixtureRequest
+# from tortoise.contrib.test import finalizer, initializer
 
 
 # @pytest.yield_fixture(scope="session")
@@ -11,11 +12,11 @@ from tortoise.contrib.test import finalizer, initializer
 #     loop.close()
 #
 #
-@pytest.fixture(scope="session", autouse=True)
-def initialize_tests(request):
-    initializer(
-        ["eventual.infra.relation"],
-        db_url="sqlite://:memory:",
-        app_label="models",
-    )
-    request.addfinalizer(finalizer)
+# @pytest.fixture(scope="session", autouse=True)
+# def initialize_tests(request: FixtureRequest) -> None:
+#     initializer(
+#         ["eventual.infra.relation"],
+#         db_url="sqlite://:memory:",
+#         app_label="models",
+#     )
+#     request.addfinalizer(finalizer)

@@ -1,7 +1,7 @@
 import contextlib
 from typing import AsyncGenerator
 
-from eventual.work_unit import WorkUnit, InterruptWork
+from eventual.work_unit import InterruptWork, WorkUnit
 
 
 class MemoryWorkUnit(WorkUnit):

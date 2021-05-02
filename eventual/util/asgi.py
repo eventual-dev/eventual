@@ -1,11 +1,7 @@
 import asyncio
 from typing import Callable, Protocol
 
-from eventual.dispatch.abc import (
-    EventStore,
-    MessageDispatcher,
-    MessageBroker,
-)
+from eventual.dispatch.abc import EventStore, MessageBroker, MessageDispatcher
 
 
 class AsgiEventRegistrant(Protocol):
