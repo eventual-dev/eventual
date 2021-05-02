@@ -1,4 +1,4 @@
-name: Docs deployment
+name: Docs
 on:
   push:
     branches:
@@ -10,6 +10,7 @@ env:
 
 jobs:
   build-docs:
+    name: Build docs 🏗
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
@@ -48,7 +49,8 @@ jobs:
           path: site
           if-no-files-found: error
 
-  publish-docs-prod:
+  deploy-docs-prod:
+    name: Deploy docs to Pages 🧐
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     needs:
@@ -59,14 +61,15 @@ jobs:
         with:
           name: mkdocs-build
 
-      - name: Publish docs to Pages 🧐 [prod]
+      - name: Deploy docs to Pages 🧐
         uses: JamesIves/github-pages-deploy-action@4.1.1
         with:
           branch: gh-pages
           folder: mkdocs-build
 
 
-  publish-docs-preview:
+  deploy-docs-preview:
+    name: Deploy docs to Surge 🧐 [preview]
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     needs:

@@ -4,6 +4,7 @@ on:
 
 jobs:
   run-checks:
+    name: Run checks 🧪
     runs-on: ubuntu-latest
     strategy:
       matrix:
