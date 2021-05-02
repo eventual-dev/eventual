@@ -41,7 +41,7 @@ async def _wait_and_pop(
     message: Message,
     guarantee: Guarantee,
     delay_on_exc: float,
-):
+) -> None:
     try:
         async with _manager_from_guarantee(
             message, message_dispatcher.event_storage, guarantee
@@ -79,7 +79,7 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
         fn: Callable[[Message], Awaitable[None]],
         guarantee: Guarantee,
         delay_on_exc: float,
-    ):
+    ) -> None:
         if delay_on_exc <= 0:
             raise ValueError("delay has to be non-negative")
         for event_type in event_type_seq:
@@ -90,13 +90,15 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
                 )
             self.fn_from_message_type[event_type] = (fn, guarantee, delay_on_exc)
 
-    async def dispatch_from_exchange(self, message_exchange: MessageBroker):
+    async def dispatch_from_exchange(self, message_exchange: MessageBroker) -> None:
         while True:
             message_stream = await message_exchange.message_stream()
             self.interrupt_dispatch = False
             await self.dispatch_from_stream(message_stream)
 
-    async def dispatch_from_stream(self, message_stream: AsyncIterable[Message]):
+    async def dispatch_from_stream(
+        self, message_stream: AsyncIterable[Message]
+    ) -> None:
         try:
             async for message in message_stream:
                 event_body = message.body

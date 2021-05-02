@@ -22,7 +22,7 @@ class Message(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def acknowledge(self):
+    def acknowledge(self) -> None:
         raise NotImplementedError
 
     def __repr__(self) -> str:
@@ -31,7 +31,9 @@ class Message(abc.ABC):
 
 class MessageBroker(abc.ABC):
     @abc.abstractmethod
-    async def send_event_body_stream(self, event_body_stream: AsyncIterable[EventBody]):
+    async def send_event_body_stream(
+        self, event_body_stream: AsyncIterable[EventBody]
+    ) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -47,11 +49,13 @@ class Guarantee(str, enum.Enum):
 
 class MessageDispatcher(abc.ABC):
     @abc.abstractmethod
-    async def dispatch_from_stream(self, message_stream: AsyncIterable[Message]):
+    async def dispatch_from_stream(
+        self, message_stream: AsyncIterable[Message]
+    ) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def dispatch_from_exchange(self, message_exchange: MessageBroker):
+    async def dispatch_from_exchange(self, message_exchange: MessageBroker) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -61,7 +65,7 @@ class MessageDispatcher(abc.ABC):
         fn: Callable[[Message], Awaitable[None]],
         guarantee: Guarantee,
         delay_on_exc: float,
-    ):
+    ) -> None:
         raise NotImplementedError
 
     def subscribe(
@@ -72,7 +76,9 @@ class MessageDispatcher(abc.ABC):
     ) -> Callable[
         [Callable[[Message], Awaitable[None]]], Callable[[Message], Awaitable[None]]
     ]:
-        def decorator(fn: Callable[[Message], Awaitable[None]]):
+        def decorator(
+            fn: Callable[[Message], Awaitable[None]]
+        ) -> Callable[[Message], Awaitable[None]]:
             self.register(event_type_seq, fn, guarantee, delay_on_exc)
             return fn
 
@@ -84,7 +90,7 @@ class EventStore(abc.ABC):
     def clear_outbox_atomically(self, *entity_seq: Entity) -> AsyncContextManager[None]:
         raise NotImplementedError
 
-    async def clear_outbox(self, entity_seq: Iterable[Entity]):
+    async def clear_outbox(self, entity_seq: Iterable[Entity]) -> None:
         for entity in entity_seq:
             # Make a copy because during asynchronous processing
             # someone can add messages to the outbox.
@@ -105,7 +111,7 @@ class EventStore(abc.ABC):
         event_id: uuid.UUID,
         body: EventBody,
         send_after: Optional[dt.datetime] = None,
-    ):
+    ) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod

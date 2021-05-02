@@ -15,7 +15,7 @@ M = TypeVar("M", bound=Entity)
 
 
 class MemoryRepository(Generic[M]):
-    def __init__(self):
+    def __init__(self) -> None:
         self._mapping: Dict[uuid.UUID, M] = {}
 
 

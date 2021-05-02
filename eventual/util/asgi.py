@@ -1,4 +1,5 @@
 import asyncio
+from typing import Callable, Protocol
 
 from eventual.dispatch.abc import (
     EventStore,
@@ -7,16 +8,21 @@ from eventual.dispatch.abc import (
 )
 
 
+class AsgiEventRegistrant(Protocol):
+    def on_event(self, event_type: str) -> Callable:
+        ...
+
+
 def register_eventual(
-    app,
+    app: AsgiEventRegistrant,
     message_exchange: MessageBroker,
     message_dispatcher: MessageDispatcher,
     event_storage: EventStore,
-):
+) -> None:
     task_from_name = dict()
 
     @app.on_event("startup")
-    async def start_eventual():
+    async def start_eventual() -> None:
         task_from_name["dispatch_task"] = asyncio.create_task(
             message_dispatcher.dispatch_from_exchange(message_exchange)
         )
@@ -25,7 +31,7 @@ def register_eventual(
         )
 
     @app.on_event("shutdown")
-    async def stop_eventual():
+    async def stop_eventual() -> None:
         # This can be called with a delay.
         # For example, uvicorn apparently waits for all tasks to complete,
         # before it invokes this callback. The timeout seems to be 10 seconds,

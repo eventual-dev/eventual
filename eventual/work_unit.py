@@ -7,11 +7,11 @@ class InterruptWork(Exception):
 
 
 class WorkUnit(abc.ABC):
-    def __init__(self):
+    def __init__(self) -> None:
         self.was_committed = False
 
     @abc.abstractmethod
-    async def rollback(self):
+    async def rollback(self) -> None:
         raise NotImplementedError
 
 

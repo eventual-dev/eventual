@@ -5,10 +5,10 @@ from eventual.work_unit import WorkUnit, InterruptWork
 
 
 class MemoryWorkUnit(WorkUnit):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
-    async def rollback(self):
+    async def rollback(self) -> None:
         raise InterruptWork
 
 
