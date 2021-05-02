@@ -40,7 +40,7 @@ jobs:
 
       - name: Build docs 🏗
         run: |
-          poetry run mkdocs build
+          poetry run scripts/docs-build.sh
 
       - name: Upload build to artifact ☁️
         uses: actions/upload-artifact@v2
