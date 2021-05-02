@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  release:
+    types:
+      - 'published'
+
+env:
+  PYTHON_VERSION: 3.9
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+
+      - name: Set up Python 🐍
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache Poetry virtualenv 💾
+        uses: actions/cache@v1
+        id: poetry-cache
+        with:
+          path: .venv
+          key: poetry-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install Poetry 📖
+        run: |
+          pip install poetry
+          poetry config virtualenvs.in-project true
+
+      - name: Install dependencies 📌
+        if: steps.poetry-cache.outputs.cache-hit != 'true'
+        run: |
+          poetry install
+
+      - name: Build package 📦
+        run: |
+          poetry run scripts/build.sh
+
+      - name: Upload package build to artifacts ☁️
+        uses: actions/upload-artifact@v2
+        with:
+          name: package
+          path: dist
+          if-no-files-found: error
+
+      - name: Publish package ⬆️
+        run: |
+          poetry run scripts/publish.sh
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}

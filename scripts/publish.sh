@@ -2,4 +2,4 @@
 
 set -x
 
-poetry build
+poetry publish
