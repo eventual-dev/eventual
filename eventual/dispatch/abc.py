@@ -2,23 +2,37 @@ import abc
 import datetime as dt
 import enum
 import uuid
+from contextlib import asynccontextmanager
 from typing import (
+    Any,
     AsyncContextManager,
+    AsyncGenerator,
     AsyncIterable,
     Awaitable,
     Callable,
+    Generic,
     Iterable,
     List,
     Optional,
+    TypeVar,
 )
 
 from eventual.model import Entity, EventBody
+from eventual.work_unit import WorkUnit
 
 
 class Message(abc.ABC):
     @property
+    def event_id(self) -> uuid.UUID:
+        return uuid.UUID(self.event_body["id"])
+
+    @property
+    def event_subject(self) -> str:
+        return self.event_body["_subject"]
+
+    @property
     @abc.abstractmethod
-    def body(self) -> EventBody:
+    def event_body(self) -> EventBody:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -26,7 +40,7 @@ class Message(abc.ABC):
         raise NotImplementedError
 
     def __repr__(self) -> str:
-        return self.body["id"]
+        return f"{self.event_id}/{self.event_subject}"
 
 
 class MessageBroker(abc.ABC):
@@ -85,12 +99,15 @@ class MessageDispatcher(abc.ABC):
         return decorator
 
 
-class EventStore(abc.ABC):
+WU = TypeVar("WU", bound=WorkUnit)
+
+
+class EventStore(abc.ABC, Generic[WU]):
     @abc.abstractmethod
-    def clear_outbox_atomically(self, *entity_seq: Entity) -> AsyncContextManager[None]:
+    def create_work_unit(self) -> AsyncContextManager[WU]:
         raise NotImplementedError
 
-    async def clear_outbox(self, entity_seq: Iterable[Entity]) -> None:
+    async def clear_outbox(self, entity_seq: Iterable[Entity[Any]]) -> None:
         for entity in entity_seq:
             # Make a copy because during asynchronous processing
             # someone can add messages to the outbox.
@@ -99,17 +116,22 @@ class EventStore(abc.ABC):
             # is important for sourcing the events later. In reality every event has a timestamp, which dictates
             # its position in the sequence.
             for event in event_seq:
-                await self.schedule_event_out(
-                    event_id=event.id, body=event.encode_body()
-                )
+                await self.schedule_event_out(event_body=event.encode_body())
             if entity.outbox:
                 raise ValueError("writing to outbox after clearing loses events")
+
+    @asynccontextmanager
+    async def clear_outbox_in_work_unit(
+        self, *entity_seq: Entity[Any]
+    ) -> AsyncGenerator[WU, None]:
+        async with self.create_work_unit() as work_unit:
+            yield work_unit
+            await self.clear_outbox(entity_seq)
 
     @abc.abstractmethod
     async def schedule_event_out(
         self,
-        event_id: uuid.UUID,
-        body: EventBody,
+        event_body: EventBody,
         send_after: Optional[dt.datetime] = None,
     ) -> None:
         raise NotImplementedError
@@ -130,19 +152,36 @@ class EventStore(abc.ABC):
     async def mark_event_dispatched(self, event_body: EventBody) -> uuid.UUID:
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def handle_exactly_once(self, message: Message) -> AsyncContextManager[EventBody]:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def handle_no_more_than_once(
+    @asynccontextmanager
+    async def handle_exactly_once(
         self, message: Message
-    ) -> AsyncContextManager[EventBody]:
-        raise NotImplementedError
+    ) -> AsyncGenerator[EventBody, None]:
+        async with self.create_work_unit():
+            yield message.event_body
+            await self.mark_event_handled(
+                message.event_body, guarantee=Guarantee.EXACTLY_ONCE
+            )
+        message.acknowledge()
 
-    @abc.abstractmethod
-    def handle_at_least_once(self, message: Message) -> AsyncContextManager[EventBody]:
-        raise NotImplementedError
+    @asynccontextmanager
+    async def handle_no_more_than_once(
+        self, message: Message
+    ) -> AsyncGenerator[EventBody, None]:
+        await self.mark_event_handled(
+            message.event_body, guarantee=Guarantee.NO_MORE_THAN_ONCE
+        )
+        message.acknowledge()
+        yield message.event_body
+
+    @asynccontextmanager
+    async def handle_at_least_once(
+        self, message: Message
+    ) -> AsyncGenerator[EventBody, None]:
+        yield message.event_body
+        await self.mark_event_handled(
+            message.event_body, guarantee=Guarantee.AT_LEAST_ONCE
+        )
+        message.acknowledge()
 
     @abc.abstractmethod
     def event_body_stream(self) -> AsyncIterable[EventBody]:

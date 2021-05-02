@@ -27,5 +27,7 @@ class Event:
 
     def encode_body(self) -> EventBody:
         mapping = dataclasses.asdict(self)
-        mapping["type"] = re.sub(r"(?<!^)(?=[A-Z])", "-", type(self).__name__).lower()
+        mapping["_subject"] = re.sub(
+            r"(?<!^)(?=[A-Z])", "-", type(self).__name__
+        ).lower()
         return mapping

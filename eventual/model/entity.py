@@ -49,16 +49,16 @@ class NoPublicConstructor(BaseMeta):
         return super().__call__(*args, **kwargs)  # type: ignore
 
 
-Id = typing.TypeVar("Id")
+ID = typing.TypeVar("ID")
 
 
-class Entity(typing.Generic[Id], metaclass=NoPublicConstructor):
-    def __init__(self, *, unique_id: Id):
+class Entity(typing.Generic[ID], metaclass=NoPublicConstructor):
+    def __init__(self, *, unique_id: ID):
         self._unique_id = unique_id
         self._outbox: typing.Deque[Event] = deque()
 
     @property
-    def id(self) -> Id:
+    def id(self) -> ID:
         return self._unique_id
 
     @property
