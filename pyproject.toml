@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eventual"
-version = "0.4.2a1"
+version = "0.5.0"
 description = ""
 authors = ["Ivan Dmitriesvkii <ivan.dmitrievsky@gmail.com>"]
 
@@ -8,6 +8,7 @@ authors = ["Ivan Dmitriesvkii <ivan.dmitrievsky@gmail.com>"]
 python = "^3.7"
 eventual-rmq = { version = "^0", optional = true }
 eventual-tortoise = { version = "^0", optional = true }
+anyio = "^3.0.1"
 
 [tool.poetry.extras]
 rmq = ["eventual-rmq"]
