@@ -1,0 +1,108 @@
+name: Docs
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+env:
+  PYTHON_VERSION: 3.9
+
+jobs:
+  build-docs:
+    name: Build docs 🏗
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+
+      - name: Set up Python 🐍
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache Poetry virtualenv 💾
+        uses: actions/cache@v1
+        id: poetry-cache
+        with:
+          path: .venv
+          key: poetry-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install Poetry 📖
+        run: |
+          pip install poetry
+          poetry config virtualenvs.in-project true
+
+      - name: Install dependencies 📌
+        if: steps.poetry-cache.outputs.cache-hit != 'true'
+        run: |
+          poetry install
+
+      - name: Build docs 🏗
+        run: |
+          poetry run scripts/docs-build.sh
+
+      - name: Upload build to artifact ☁️
+        uses: actions/upload-artifact@v2
+        with:
+          name: mkdocs-build
+          path: site
+          if-no-files-found: error
+
+  deploy-docs-prod:
+    name: Deploy docs to Pages 🧐
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    needs:
+      - build-docs
+    steps:
+      - name: Download build from artifact 🌨
+        uses: actions/download-artifact@v1
+        with:
+          name: mkdocs-build
+
+      - name: Deploy docs to Pages 🧐
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          branch: gh-pages
+          folder: mkdocs-build
+
+
+  deploy-docs-preview:
+    name: Deploy docs to Surge 🧐 [preview]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs:
+      - build-docs
+    steps:
+      - name: Download build from artifact 🌨
+        uses: actions/download-artifact@v1
+        with:
+          name: mkdocs-build
+
+      - name: Publish to Surge 🧐 [preview]
+        id: publish-preview
+        env:
+          SURGE_LOGIN: dev@eventual.com
+          SURGE_TOKEN: 5ed7fcac90fac92170a28e638c01219b
+        run: |
+          pr_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          deploy_host="${pr_number}-eventual-review.surge.sh"
+          npx surge mkdocs-build $deploy_host
+          echo "::set-output name=deploy-url::https://$deploy_host"
+
+      - name: Find existing comment 🔎
+        id: find-comment
+        uses: peter-evans/find-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: preview version of docs
+
+      - name: Comment PR ✨
+        if: steps.find-comment.outputs.comment-id == ''
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            This is a preview version of docs: ${{ steps.publish-preview.outputs.deploy-url }}

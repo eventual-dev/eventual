@@ -3,4 +3,3 @@
 set -x
 
 poetry build
-mkdocs build

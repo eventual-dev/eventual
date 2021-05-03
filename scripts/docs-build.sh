@@ -2,4 +2,4 @@
 
 set -x
 
-coverage report
+mkdocs build
