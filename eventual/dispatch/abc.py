@@ -13,6 +13,7 @@ from typing import (
     Generic,
     Iterable,
     List,
+    Mapping,
     Optional,
     Tuple,
     TypeVar,
@@ -23,6 +24,8 @@ from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStre
 
 from eventual.model import Entity, EventBody
 from eventual.work_unit import WorkUnit
+
+WU = TypeVar("WU", bound=WorkUnit)
 
 
 class Message(abc.ABC):
@@ -47,66 +50,10 @@ class Message(abc.ABC):
         return f"{self.event_id}/{self.event_subject}"
 
 
-class MessageBroker(abc.ABC):
-    @abc.abstractmethod
-    async def send_event_body_stream(
-        self,
-        event_body_stream: AsyncIterable[EventBody],
-        confirmation_send_stream: MemoryObjectSendStream[None],
-    ) -> None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def message_stream(self) -> AsyncIterable[Message]:
-        raise NotImplementedError
-
-
 class Guarantee(str, enum.Enum):
     NO_MORE_THAN_ONCE = "NO_MORE_THAN_ONCE"
     EXACTLY_ONCE = "EXACTLY_ONCE"
     AT_LEAST_ONCE = "AT_LEAST_ONCE"
-
-
-class MessageDispatcher(abc.ABC):
-    @abc.abstractmethod
-    async def dispatch_from_stream(
-        self, message_stream: AsyncIterable[Message]
-    ) -> None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def dispatch_from_exchange(self, message_exchange: MessageBroker) -> None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def register(
-        self,
-        subject_seq: List[str],
-        fn: Callable[[Message, "EventStore"], Awaitable[None]],
-        guarantee: Guarantee,
-        delay_on_exc: float,
-    ) -> None:
-        raise NotImplementedError
-
-    def subscribe(
-        self,
-        event_type_seq: List[str],
-        guarantee: Guarantee = Guarantee.AT_LEAST_ONCE,
-        delay_on_exc: float = 1.0,
-    ) -> Callable[
-        [Callable[[Message, "EventStore"], Awaitable[None]]],
-        Callable[[Message, "EventStore"], Awaitable[None]],
-    ]:
-        def decorator(
-            fn: Callable[[Message, EventStore], Awaitable[None]]
-        ) -> Callable[[Message, EventStore], Awaitable[None]]:
-            self.register(event_type_seq, fn, guarantee, delay_on_exc)
-            return fn
-
-        return decorator
-
-
-WU = TypeVar("WU", bound=WorkUnit)
 
 
 class EventStore(abc.ABC, Generic[WU]):
@@ -246,3 +193,56 @@ class EventStore(abc.ABC, Generic[WU]):
                     # then _not_confirmed_event_body_seq would return List[R],
                     # and _confirm_event(_) would expect R as an argument.
                     await self._confirm_event(event_body["id"])
+
+
+class MessageBroker(abc.ABC):
+    def __init__(self, event_store: EventStore[Any]):
+        self.event_store = event_store
+
+    @abc.abstractmethod
+    async def send_event_body_stream(
+        self,
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def message_receive_stream(self) -> AsyncIterable[Message]:
+        raise NotImplementedError
+
+
+MessageHandler = Callable[[Message, EventStore[WU]], Awaitable[None]]
+HandlerSpecification = Tuple[MessageHandler[WU], Guarantee, float]
+
+
+class HandlerRegistry(abc.ABC, Generic[WU]):
+    @abc.abstractmethod
+    def register(
+        self,
+        subject_seq: List[str],
+        handler: MessageHandler[WU],
+        guarantee: Guarantee,
+        delay_on_exc: float,
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def mapping(self) -> Mapping[str, HandlerSpecification[WU]]:
+        raise NotImplementedError
+
+    def subscribe(
+        self,
+        event_type_seq: List[str],
+        guarantee: Guarantee = Guarantee.AT_LEAST_ONCE,
+        delay_on_exc: float = 1.0,
+    ) -> Callable[[MessageHandler[WU]], MessageHandler[WU]]:
+        def decorator(handler: MessageHandler[WU]) -> MessageHandler[WU]:
+            self.register(event_type_seq, handler, guarantee, delay_on_exc)
+            return handler
+
+        return decorator
+
+
+class MessageDispatcher(abc.ABC):
+    @abc.abstractmethod
+    async def dispatch_from_broker(self, message_broker: MessageBroker) -> None:
+        raise NotImplementedError

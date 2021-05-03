@@ -1,12 +1,13 @@
 import datetime as dt
+from types import MappingProxyType
 from typing import (
     AsyncContextManager,
-    AsyncIterable,
     Awaitable,
     Callable,
     Dict,
+    Generic,
     List,
-    Tuple,
+    Mapping,
 )
 
 from anyio.abc import TaskGroup
@@ -14,7 +15,17 @@ from anyio.abc import TaskGroup
 from eventual import util
 
 from ..model import EventBody
-from .abc import EventStore, Guarantee, Message, MessageBroker, MessageDispatcher
+from .abc import (
+    WU,
+    EventStore,
+    Guarantee,
+    HandlerRegistry,
+    HandlerSpecification,
+    Message,
+    MessageBroker,
+    MessageDispatcher,
+    MessageHandler,
+)
 
 
 def _manager_from_guarantee(
@@ -53,44 +64,49 @@ async def _wait_and_pop(
         raise
 
 
-class ConcurrentMessageDispatcher(MessageDispatcher):
+class Registry(HandlerRegistry, Generic[WU]):
     def __init__(
-        self, task_group: TaskGroup, event_store: EventStore, delay_on_exc: float
-    ):
-        self.task_group = task_group
-        self.event_store = event_store
-        self.delay_on_exc = delay_on_exc
-
-        self.fn_from_subject: Dict[
+        self,
+    ) -> None:
+        self.handler_spec_from_subject: Dict[
             str,
-            Tuple[Callable[[Message, EventStore], Awaitable[None]], Guarantee, float],
+            HandlerSpecification[WU],
         ] = {}
 
     def register(
         self,
         subject_seq: List[str],
-        fn: Callable[[Message, EventStore], Awaitable[None]],
+        handler: MessageHandler[WU],
         guarantee: Guarantee,
         delay_on_exc: float,
     ) -> None:
         if delay_on_exc <= 0:
             raise ValueError("delay has to be non-negative")
         for subject in subject_seq:
-            if subject in self.fn_from_subject:
+            if subject in self.handler_spec_from_subject:
                 # TODO: Change error type to something more appropriate.
                 raise ValueError(
                     "it is not possible to register multiple functions to handle the same event type"
                 )
-            self.fn_from_subject[subject] = (fn, guarantee, delay_on_exc)
+            self.handler_spec_from_subject[subject] = (handler, guarantee, delay_on_exc)
 
-    async def dispatch_from_exchange(self, message_exchange: MessageBroker) -> None:
-        while True:
-            message_stream = await message_exchange.message_stream()
-            await self.dispatch_from_stream(message_stream)
+    def mapping(self) -> Mapping[str, HandlerSpecification[WU]]:
+        return MappingProxyType(self.handler_spec_from_subject)
 
-    async def dispatch_from_stream(
-        self, message_stream: AsyncIterable[Message]
-    ) -> None:
+
+class ConcurrentMessageDispatcher(MessageDispatcher, Generic[WU]):
+    def __init__(
+        self,
+        task_group: TaskGroup,
+        event_store: EventStore[WU],
+        handler_registry: HandlerRegistry[WU],
+    ):
+        self.task_group = task_group
+        self.event_store = event_store
+        self.handler_spec_from_subject = handler_registry.mapping()
+
+    async def dispatch_from_broker(self, message_broker: MessageBroker) -> None:
+        message_stream = await message_broker.message_receive_stream()
         async for message in message_stream:
             event_body = message.event_body
 
@@ -103,7 +119,7 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
                 message.acknowledge()
                 continue
 
-            triplet = self.fn_from_subject.get(message.event_subject)
+            triplet = self.handler_spec_from_subject.get(message.event_subject)
             if triplet is None:
                 continue
 
