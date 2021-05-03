@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eventual"
-version = "0.5.0"
+version = "0.5.0a1"
 description = ""
 authors = ["Ivan Dmitriesvkii <ivan.dmitrievsky@gmail.com>"]
 
