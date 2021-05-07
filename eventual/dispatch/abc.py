@@ -50,39 +50,68 @@ class Message(abc.ABC):
         return f"{self.event_id}/{self.event_subject}"
 
 
-class Guarantee(str, enum.Enum):
-    NO_MORE_THAN_ONCE = "NO_MORE_THAN_ONCE"
-    EXACTLY_ONCE = "EXACTLY_ONCE"
-    AT_LEAST_ONCE = "AT_LEAST_ONCE"
+class MessageBroker(abc.ABC):
+    @abc.abstractmethod
+    async def send_event_body_stream(
+        self,
+        event_body_stream: MemoryObjectReceiveStream[EventBody],
+        confirmation_send_stream: MemoryObjectSendStream[EventBody],
+    ) -> None:
+        # We could be more general and say that event_body_stream is an AsyncIterable, but memory streams
+        # have ability to do a clean shutdown, which is convenient.
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def message_receive_stream(self) -> AsyncIterable[Message]:
+        raise NotImplementedError
 
 
 class EventStore(abc.ABC, Generic[WU]):
-    def __init__(self) -> None:
-        unconfirmed_stream_pair: Tuple[
-            MemoryObjectSendStream[EventBody], MemoryObjectReceiveStream[EventBody]
-        ] = anyio.create_memory_object_stream()
-        confirmation_stream_pair: Tuple[
-            MemoryObjectSendStream[None], MemoryObjectReceiveStream[None]
-        ] = anyio.create_memory_object_stream()
-        trigger_stream_pair: Tuple[
-            MemoryObjectSendStream[None], MemoryObjectReceiveStream[None]
-        ] = anyio.create_memory_object_stream()
-        (
-            self._unconfirmed_send_stream,
-            self.unconfirmed_receive_stream,
-        ) = unconfirmed_stream_pair
-        (
-            self.confirmation_send_stream,
-            self._confirmation_receive_stream,
-        ) = confirmation_stream_pair
-        (
-            self._trigger_send_stream,
-            self._trigger_receive_stream,
-        ) = trigger_stream_pair
-
     @abc.abstractmethod
     def create_work_unit(self) -> AsyncContextManager[WU]:
         raise NotImplementedError
+
+
+class EventSendStore(EventStore[WU]):
+    def __init__(self, event_body_send_stream: MemoryObjectSendStream[EventBody]) -> None:
+        self.event_body_send_stream = event_body_send_stream
+
+        confirmation_stream_pair: Tuple[
+            MemoryObjectSendStream[EventBody], MemoryObjectReceiveStream[EventBody]
+        ] = anyio.create_memory_object_stream()
+        (
+            self.confirmation_send_stream,
+            self._confirmation_stream,
+        ) = confirmation_stream_pair
+
+    @abc.abstractmethod
+    async def _write_event_to_send_soon(
+        self, event_body: EventBody, send_after: Optional[dt.datetime] = None
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def _mark_event_as_sent(self, event_body: EventBody) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def schedule_event_to_send(
+        self,
+        event_body: EventBody,
+        delay: float = 0.0,
+    ) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def schedule_every_written_event_to_send(
+        self,
+    ) -> None:
+        raise NotImplementedError
+
+    async def receive_confirmation_stream(self) -> None:
+        async with self._confirmation_stream:
+            async for event_body in self._confirmation_stream:
+                await self._mark_event_as_sent(event_body)
 
     async def clear_outbox(self, entity_seq: Iterable[Entity[Any]]) -> None:
         for entity in entity_seq:
@@ -92,6 +121,9 @@ class EventStore(abc.ABC, Generic[WU]):
             # One may think that the order, in which the events are written here,
             # is important for sourcing the events later. In reality every event has a timestamp, which dictates
             # its position in the sequence.
+            # TODO: Maybe timestamp data is not reliable enough in the context of tracking changes to entities.
+            # For such purposes we would have to store origin of the message.
+            # TODO: It could be better to explicitly use the stream here to achieve clean shutdown.
             for event in event_seq:
                 await self.schedule_event_to_send(event_body=event.encode_body())
             if entity.outbox:
@@ -105,28 +137,20 @@ class EventStore(abc.ABC, Generic[WU]):
             yield work_unit
             await self.clear_outbox(entity_seq)
 
-    @abc.abstractmethod
-    async def _write_event_to_send_soon(
-        self, body: EventBody, send_after: Optional[dt.datetime] = None
-    ) -> None:
-        raise NotImplementedError
 
-    async def schedule_event_to_send(
-        self,
-        event_body: EventBody,
-        send_after: Optional[dt.datetime] = None,
-    ) -> None:
-        await self._write_event_to_send_soon(event_body, send_after)
-        # TODO: Think through this part, because buffer size if 0 by default and this can block,
-        # but I'm not sure if it's a big deal.
-        await self._trigger_send_stream.send(None)
+class Guarantee(str, enum.Enum):
+    NO_MORE_THAN_ONCE = "NO_MORE_THAN_ONCE"
+    EXACTLY_ONCE = "EXACTLY_ONCE"
+    AT_LEAST_ONCE = "AT_LEAST_ONCE"
 
+
+class EventReceiveStore(EventStore[WU]):
     @abc.abstractmethod
     async def is_event_handled(self, event_id: uuid.UUID) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def mark_event_handled(
+    async def mark_event_as_handled(
         self,
         event_body: EventBody,
         guarantee: Guarantee,
@@ -134,7 +158,7 @@ class EventStore(abc.ABC, Generic[WU]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def mark_event_dispatched(self, event_body: EventBody) -> uuid.UUID:
+    async def mark_event_as_dispatched(self, event_body: EventBody) -> uuid.UUID:
         raise NotImplementedError
 
     @asynccontextmanager
@@ -143,7 +167,7 @@ class EventStore(abc.ABC, Generic[WU]):
     ) -> AsyncGenerator[EventBody, None]:
         async with self.create_work_unit():
             yield message.event_body
-            await self.mark_event_handled(
+            await self.mark_event_as_handled(
                 message.event_body, guarantee=Guarantee.EXACTLY_ONCE
             )
         message.acknowledge()
@@ -152,7 +176,7 @@ class EventStore(abc.ABC, Generic[WU]):
     async def handle_no_more_than_once(
         self, message: Message
     ) -> AsyncGenerator[EventBody, None]:
-        await self.mark_event_handled(
+        await self.mark_event_as_handled(
             message.event_body, guarantee=Guarantee.NO_MORE_THAN_ONCE
         )
         message.acknowledge()
@@ -163,54 +187,13 @@ class EventStore(abc.ABC, Generic[WU]):
         self, message: Message
     ) -> AsyncGenerator[EventBody, None]:
         yield message.event_body
-        await self.mark_event_handled(
+        await self.mark_event_as_handled(
             message.event_body, guarantee=Guarantee.AT_LEAST_ONCE
         )
         message.acknowledge()
 
-    @abc.abstractmethod
-    async def _not_confirmed_event_body_seq(
-        self,
-    ) -> List[EventBody]:
-        raise NotImplementedError
 
-    @abc.abstractmethod
-    async def _confirm_event(self, event_id: uuid.UUID) -> None:
-        raise NotImplementedError
-
-    async def send_every_unconfirmed_event(self) -> None:
-        async with self._trigger_receive_stream:
-            async for _ in self._trigger_receive_stream:
-                event_body_seq = await self._not_confirmed_event_body_seq()
-
-                for event_body in event_body_seq:
-                    await self._unconfirmed_send_stream.send(event_body)
-                    await self._confirmation_receive_stream.receive()
-                    # TODO: This goes to the data store twice for every event,
-                    # even though event_body_seq could probably contain some specific ORM class
-                    # that can be updated directly instead of calling _confirm_event with event id.
-                    # Maybe it would make sense to be generic over such an ORM class,
-                    # then _not_confirmed_event_body_seq would return List[R],
-                    # and _confirm_event(_) would expect R as an argument.
-                    await self._confirm_event(event_body["id"])
-
-
-class MessageBroker(abc.ABC):
-    def __init__(self, event_store: EventStore[Any]):
-        self.event_store = event_store
-
-    @abc.abstractmethod
-    async def send_event_body_stream(
-        self,
-    ) -> None:
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def message_receive_stream(self) -> AsyncIterable[Message]:
-        raise NotImplementedError
-
-
-MessageHandler = Callable[[Message, EventStore[WU]], Awaitable[None]]
+MessageHandler = Callable[[Message, EventSendStore[WU]], Awaitable[None]]
 HandlerSpecification = Tuple[MessageHandler[WU], Guarantee, float]
 
 
@@ -244,5 +227,11 @@ class HandlerRegistry(abc.ABC, Generic[WU]):
 
 class MessageDispatcher(abc.ABC):
     @abc.abstractmethod
-    async def dispatch_from_broker(self, message_broker: MessageBroker) -> None:
+    async def dispatch_from_broker(
+        self,
+        handler_registry: HandlerRegistry[WU],
+        message_broker: MessageBroker,
+        event_receive_store: EventReceiveStore[WU],
+        event_send_store: EventSendStore[WU],
+    ) -> None:
         raise NotImplementedError

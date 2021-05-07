@@ -1,21 +1,51 @@
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Callable
+from typing import Any, AsyncGenerator, Callable, Tuple, Optional
 
 import anyio
-from anyio.abc._tasks import TaskGroup
+from anyio.abc import TaskGroup
+from anyio.streams.memory import MemoryObjectSendStream, MemoryObjectReceiveStream
 
-from eventual.dispatch.abc import MessageBroker, MessageDispatcher
+from eventual.dispatch.abc import WU, EventReceiveStore, HandlerRegistry, MessageBroker
+from eventual.dispatch.concurrent_dispatcher import ConcurrentMessageDispatcher
+from eventual.dispatch.concurrent_send_store import ConcurrentEventSendStore
+from eventual.model import EventBody
+from eventual.work_unit import WorkUnit
 
 
-@asynccontextmanager
-async def eventual_lifespan(
-    message_broker: MessageBroker,
-    message_from_task_group: Callable[[TaskGroup], MessageDispatcher],
-) -> AsyncGenerator[None, None]:
-    async with anyio.create_task_group() as task_group:
-        message_dispatcher = message_from_task_group(task_group)
+def eventual_concurrent_lifespan(
+        handler_registry: HandlerRegistry[WU],
+        message_broker: MessageBroker,
+        event_receive_store: EventReceiveStore[WorkUnit],
+        event_body_stream_pair: Tuple[MemoryObjectSendStream[EventBody], MemoryObjectReceiveStream[EventBody]],
+        concurrent_event_send_store_factory: Callable[
+            [MemoryObjectSendStream[EventBody], TaskGroup], ConcurrentEventSendStore[WU]
+        ],
+        concurrent_message_dispatcher_factory: Callable[
+            [TaskGroup], ConcurrentMessageDispatcher
+        ],
+) -> Callable:
+    event_body_send_stream, event_body_stream = event_body_stream_pair
 
-        task_group.start_soon(message_dispatcher.dispatch_from_broker, message_broker)
-        task_group.start_soon(message_broker.send_event_body_stream)
-        yield
-        await task_group.cancel_scope.cancel()
+    async def lifespan_context(_: Optional[Any] = None) -> AsyncGenerator[None, None]:
+        async with anyio.create_task_group() as handler_group:
+            async with anyio.create_task_group() as eventual_group:
+                message_dispatcher = concurrent_message_dispatcher_factory(handler_group)
+                event_send_store = concurrent_event_send_store_factory(event_body_send_stream, handler_group)
+
+                eventual_group.start_soon(
+                    message_dispatcher.dispatch_from_broker,
+                    handler_registry,
+                    message_broker,
+                    event_receive_store,
+                    event_send_store,
+                )
+                eventual_group.start_soon(event_send_store.receive_confirmation_stream)
+                eventual_group.start_soon(
+                    message_broker.send_event_body_stream,
+                    event_body_stream,
+                    event_send_store.confirmation_send_stream,
+                )
+                await event_send_store.schedule_every_written_event_to_send()
+                yield
+                await eventual_group.cancel_scope.cancel()
+
+    return lifespan_context

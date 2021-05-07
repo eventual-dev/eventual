@@ -149,7 +149,7 @@ toml = ["toml"]
 
 [[package]]
 name = "eventual-rmq"
-version = "0.2.1"
+version = "0.3.0"
 description = ""
 category = "main"
 optional = true
@@ -162,7 +162,7 @@ orjson = ">=3.5.2,<4.0.0"
 
 [[package]]
 name = "eventual-tortoise"
-version = "0.1.1"
+version = "0.2.0"
 description = ""
 category = "main"
 optional = true
@@ -537,7 +537,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "pygments"
-version = "2.8.1"
+version = "2.9.0"
 description = "Pygments is a syntax highlighting package written in Python."
 category = "dev"
 optional = false
@@ -656,7 +656,7 @@ python-versions = "*"
 
 [[package]]
 name = "six"
-version = "1.15.0"
+version = "1.16.0"
 description = "Python 2 and 3 compatibility utilities"
 category = "dev"
 optional = false
@@ -876,12 +876,12 @@ coverage = [
     {file = "coverage-5.5.tar.gz", hash = "sha256:ebe78fe9a0e874362175b02371bdfbee64d8edc42a044253ddf4ee7d3c15212c"},
 ]
 eventual-rmq = [
-    {file = "eventual-rmq-0.2.1.tar.gz", hash = "sha256:49024143f79b86b4c52edb675cad1ff8a5295f97bc5b4b48030d99430cd0a9f1"},
-    {file = "eventual_rmq-0.2.1-py3-none-any.whl", hash = "sha256:350b4c6b815165e77697ef9b326d0a4a2566e35a1a7bdf1148b0de74bbf9359c"},
+    {file = "eventual-rmq-0.3.0.tar.gz", hash = "sha256:c5d70e8c2a98fc9b8e1a0468b883e7de18b4a4238c3551dfff6c60a52e4ac594"},
+    {file = "eventual_rmq-0.3.0-py3-none-any.whl", hash = "sha256:b8c63297b3d73c5786f3c6f8873a37bc6599cba4860b8507c7aff261aa8add59"},
 ]
 eventual-tortoise = [
-    {file = "eventual-tortoise-0.1.1.tar.gz", hash = "sha256:4507b86e61d944aa1ce935d231c6c8f87ae8a168e420610bfc07cbab299b4ddd"},
-    {file = "eventual_tortoise-0.1.1-py3-none-any.whl", hash = "sha256:c745b477ef4245a8fdad46289a3f02188ad57044349751149bbd8b00ff14dc93"},
+    {file = "eventual-tortoise-0.2.0.tar.gz", hash = "sha256:1367d06a933d5874da4200bd2f0300811458ac458ead7dc3b0fffcfc9b87d705"},
+    {file = "eventual_tortoise-0.2.0-py3-none-any.whl", hash = "sha256:e220b6cb05e4b8aa8731efe4d64ecf6e4a317c10d8176622964802da28631cb8"},
 ]
 flake8 = [
     {file = "flake8-3.9.1-py2.py3-none-any.whl", hash = "sha256:3b9f848952dddccf635be78098ca75010f073bfe14d2c6bda867154bea728d2a"},
@@ -1135,8 +1135,8 @@ pyflakes = [
     {file = "pyflakes-2.3.1.tar.gz", hash = "sha256:f5bc8ecabc05bb9d291eb5203d6810b49040f6ff446a756326104746cc00c1db"},
 ]
 pygments = [
-    {file = "Pygments-2.8.1-py3-none-any.whl", hash = "sha256:534ef71d539ae97d4c3a4cf7d6f110f214b0e687e92f9cb9d2a3b0d3101289c8"},
-    {file = "Pygments-2.8.1.tar.gz", hash = "sha256:2656e1a6edcdabf4275f9a3640db59fd5de107d88e8663c5d4e9a0fa62f77f94"},
+    {file = "Pygments-2.9.0-py3-none-any.whl", hash = "sha256:d66e804411278594d764fc69ec36ec13d9ae9147193a1740cd34d272ca383b8e"},
+    {file = "Pygments-2.9.0.tar.gz", hash = "sha256:a18f47b506a429f6f4b9df81bb02beab9ca21d0a5fee38ed15aef65f0545519f"},
 ]
 pymdown-extensions = [
     {file = "pymdown-extensions-8.1.1.tar.gz", hash = "sha256:632371fa3bf1b21a0e3f4063010da59b41db049f261f4c0b0872069a9b6d1735"},
@@ -1245,8 +1245,8 @@ regex = [
     {file = "regex-2021.4.4.tar.gz", hash = "sha256:52ba3d3f9b942c49d7e4bc105bb28551c44065f139a65062ab7912bef10c9afb"},
 ]
 six = [
-    {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
-    {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
+    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
+    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
 sniffio = [
     {file = "sniffio-1.2.0-py3-none-any.whl", hash = "sha256:471b71698eac1c2112a40ce2752bb2f4a4814c22a54a3eed3676bc0f5ca9f663"},
