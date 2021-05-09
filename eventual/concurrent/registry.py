@@ -1,7 +1,9 @@
 from types import MappingProxyType
 from typing import Dict, Generic, List, Mapping
 
-from .abc import WU, Guarantee, HandlerRegistry, HandlerSpecification, MessageHandler
+from eventual.event_store import Guarantee
+from eventual.registry import HandlerRegistry, HandlerSpecification, MessageHandler
+from eventual.work_unit import WU
 
 
 class Registry(HandlerRegistry, Generic[WU]):

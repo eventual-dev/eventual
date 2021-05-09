@@ -2,19 +2,12 @@ from typing import AsyncContextManager
 
 from anyio.abc import TaskGroup
 
-from ..model import EventBody
-from ..work_unit import WorkUnit
-from .abc import (
-    WU,
-    EventReceiveStore,
-    EventSendStore,
-    Guarantee,
-    HandlerRegistry,
-    Message,
-    MessageBroker,
-    MessageDispatcher,
-    MessageHandler,
-)
+from eventual.broker import Message, MessageBroker
+from eventual.dispatcher import MessageDispatcher
+from eventual.event_store import EventReceiveStore, EventSendStore, Guarantee
+from eventual.model import EventBody
+from eventual.registry import HandlerRegistry, MessageHandler
+from eventual.work_unit import WU, WorkUnit
 
 
 def _manager_from_guarantee(
@@ -92,5 +85,11 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
             await event_receive_store.mark_event_as_dispatched(event_body)
 
             self.task_group.start_soon(
-                _handle_with_retry, event_receive_store, event_send_store, fn, message, guarantee, delay_on_exc
+                _handle_with_retry,
+                event_receive_store,
+                event_send_store,
+                fn,
+                message,
+                guarantee,
+                delay_on_exc,
             )

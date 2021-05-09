@@ -1,35 +1,41 @@
-from typing import Any, AsyncGenerator, Callable, Tuple, Optional
+from typing import Any, AsyncGenerator, Callable, Optional, Tuple
 
 import anyio
 from anyio.abc import TaskGroup
-from anyio.streams.memory import MemoryObjectSendStream, MemoryObjectReceiveStream
+from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 
+from eventual.concurrent.dispatcher import ConcurrentMessageDispatcher
+from eventual.concurrent.event_send_store import ConcurrentEventSendStore
 from eventual.dispatch.abc import WU, EventReceiveStore, HandlerRegistry, MessageBroker
-from eventual.dispatch.concurrent_dispatcher import ConcurrentMessageDispatcher
-from eventual.dispatch.concurrent_send_store import ConcurrentEventSendStore
 from eventual.model import EventBody
 from eventual.work_unit import WorkUnit
 
 
 def eventual_concurrent_lifespan(
-        handler_registry: HandlerRegistry[WU],
-        message_broker: MessageBroker,
-        event_receive_store: EventReceiveStore[WorkUnit],
-        event_body_stream_pair: Tuple[MemoryObjectSendStream[EventBody], MemoryObjectReceiveStream[EventBody]],
-        concurrent_event_send_store_factory: Callable[
-            [MemoryObjectSendStream[EventBody], TaskGroup], ConcurrentEventSendStore[WU]
-        ],
-        concurrent_message_dispatcher_factory: Callable[
-            [TaskGroup], ConcurrentMessageDispatcher
-        ],
+    handler_registry: HandlerRegistry[WU],
+    message_broker: MessageBroker,
+    event_receive_store: EventReceiveStore[WorkUnit],
+    event_body_stream_pair: Tuple[
+        MemoryObjectSendStream[EventBody], MemoryObjectReceiveStream[EventBody]
+    ],
+    concurrent_event_send_store_factory: Callable[
+        [MemoryObjectSendStream[EventBody], TaskGroup], ConcurrentEventSendStore[WU]
+    ],
+    concurrent_message_dispatcher_factory: Callable[
+        [TaskGroup], ConcurrentMessageDispatcher
+    ],
 ) -> Callable:
     event_body_send_stream, event_body_stream = event_body_stream_pair
 
     async def lifespan_context(_: Optional[Any] = None) -> AsyncGenerator[None, None]:
         async with anyio.create_task_group() as handler_group:
             async with anyio.create_task_group() as eventual_group:
-                message_dispatcher = concurrent_message_dispatcher_factory(handler_group)
-                event_send_store = concurrent_event_send_store_factory(event_body_send_stream, handler_group)
+                message_dispatcher = concurrent_message_dispatcher_factory(
+                    handler_group
+                )
+                event_send_store = concurrent_event_send_store_factory(
+                    event_body_send_stream, handler_group
+                )
 
                 eventual_group.start_soon(
                     message_dispatcher.dispatch_from_broker,

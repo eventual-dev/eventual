@@ -1,22 +1,29 @@
 import contextlib
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Type
 
 from eventual.work_unit import InterruptWork, WorkUnit
 
 
 class MemoryWorkUnit(WorkUnit):
     def __init__(self) -> None:
-        super().__init__()
+        self._commit = False
 
-    async def rollback(self) -> None:
-        raise InterruptWork
+    @classmethod
+    @contextlib.asynccontextmanager
+    async def create(
+        cls: Type["MemoryWorkUnit"],
+    ) -> AsyncGenerator["MemoryWorkUnit", None]:
+        work_unit = MemoryWorkUnit()
+        try:
+            yield work_unit
+            if not work_unit._commit:
+                raise InterruptWork
+        except InterruptWork:
+            work_unit._commit = False
 
+    async def commit(self) -> None:
+        self._commit = True
 
-@contextlib.asynccontextmanager
-async def create_work_unit() -> AsyncGenerator[MemoryWorkUnit, None]:
-    try:
-        uow = MemoryWorkUnit()
-        yield uow
-        uow.was_committed = True
-    except InterruptWork:
-        pass
+    @property
+    def committed(self) -> bool:
+        return self._commit
