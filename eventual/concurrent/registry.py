@@ -31,7 +31,9 @@ class Registry(HandlerRegistry, Generic[WU]):
                 raise ValueError(
                     "it is not possible to register multiple functions to handle the same event type"
                 )
-            self.handler_spec_from_subject[subject] = (handler, guarantee, delay_on_exc)
+            self.handler_spec_from_subject[subject] = HandlerSpecification[WU](
+                message_handler=handler, guarantee=guarantee, delay_on_exc=delay_on_exc
+            )
 
     def mapping(self) -> Mapping[str, HandlerSpecification[WU]]:
         return MappingProxyType(self.handler_spec_from_subject)

@@ -1,12 +1,24 @@
 import abc
-from typing import Awaitable, Callable, Generic, List, Mapping, Tuple
+import dataclasses
+from typing import Awaitable, Callable, Generic, List, Mapping, Protocol
 
 from .broker import Message
 from .event_store import EventSendStore, Guarantee
 from .work_unit import WU
 
-MessageHandler = Callable[[Message, EventSendStore[WU]], Awaitable[None]]
-HandlerSpecification = Tuple[MessageHandler[WU], Guarantee, float]
+
+class MessageHandler(Protocol[WU]):
+    def __call__(
+        self, __msg: Message, __event_send_store: EventSendStore[WU]
+    ) -> Awaitable[None]:
+        ...
+
+
+@dataclasses.dataclass
+class HandlerSpecification(Generic[WU]):
+    guarantee: Guarantee
+    delay_on_exc: float
+    message_handler: MessageHandler[WU]
 
 
 class HandlerRegistry(abc.ABC, Generic[WU]):

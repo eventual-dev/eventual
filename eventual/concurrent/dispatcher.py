@@ -75,11 +75,10 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
                 message.acknowledge()
                 continue
 
-            triplet = handler_spec_from_subject.get(message.event_subject)
-            if triplet is None:
+            handler_spec = handler_spec_from_subject.get(message.event_subject)
+            if handler_spec is None:
                 continue
 
-            fn, guarantee, delay_on_exc = triplet
             # We save every event that we attempt to dispatch, not every event we receive,
             # because we can get a lot of events that we do not care about.
             await event_receive_store.mark_event_as_dispatched(event_body)
@@ -88,8 +87,8 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
                 _handle_with_retry,
                 event_receive_store,
                 event_send_store,
-                fn,
+                handler_spec.message_handler,
                 message,
-                guarantee,
-                delay_on_exc,
+                handler_spec.guarantee,
+                handler_spec.delay_on_exc,
             )
