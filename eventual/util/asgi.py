@@ -50,7 +50,7 @@ def eventual_concurrent_lifespan(
                     event_body_stream,
                     event_send_store.confirmation_send_stream,
                 )
-                await event_send_store.schedule_every_written_event_to_send()
+                await event_send_store.schedule_every_written_event_to_be_sent()
                 yield
                 await eventual_group.cancel_scope.cancel()
 

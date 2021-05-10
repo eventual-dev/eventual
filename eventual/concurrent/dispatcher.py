@@ -36,7 +36,7 @@ async def _handle_with_retry(
         async with _manager_from_guarantee(message, event_receive_store, guarantee):
             await fn(message, event_send_store)
     except Exception:
-        await event_send_store.schedule_event_to_send(
+        await event_send_store.schedule_event_to_be_sent(
             message.event_body,
             delay=delay_on_exc,
         )

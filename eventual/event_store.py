@@ -43,7 +43,7 @@ class EventSendStore(EventStore[WU]):
         ) = confirmation_stream_pair
 
     @abc.abstractmethod
-    async def _write_event_to_send_soon(
+    async def _write_event_being_scheduled(
         self, event_body: EventBody, send_after: Optional[dt.datetime] = None
     ) -> None:
         raise NotImplementedError
@@ -53,7 +53,7 @@ class EventSendStore(EventStore[WU]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def schedule_event_to_send(
+    async def schedule_event_to_be_sent(
         self,
         event_body: EventBody,
         delay: float = 0.0,
@@ -61,7 +61,7 @@ class EventSendStore(EventStore[WU]):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def schedule_every_written_event_to_send(
+    async def schedule_every_written_event_to_be_sent(
         self,
     ) -> None:
         raise NotImplementedError
@@ -83,7 +83,7 @@ class EventSendStore(EventStore[WU]):
             # For such purposes we would have to store origin of the message.
             # TODO: It could be better to explicitly use the stream here to achieve clean shutdown.
             for event in event_seq:
-                await self.schedule_event_to_send(event_body=event.encode_body())
+                await self.schedule_event_to_be_sent(event_body=event.encode_body())
             if entity.outbox:
                 raise ValueError("writing to outbox after clearing loses events")
 
@@ -94,6 +94,7 @@ class EventSendStore(EventStore[WU]):
         async with self.create_work_unit() as work_unit:
             yield work_unit
             await self.clear_outbox(entity_seq)
+            await work_unit.commit()
 
 
 class Guarantee(str, enum.Enum):
@@ -123,11 +124,12 @@ class EventReceiveStore(EventStore[WU]):
     async def handle_exactly_once(
         self, message: Message
     ) -> AsyncGenerator[EventBody, None]:
-        async with self.create_work_unit():
+        async with self.create_work_unit() as work_unit:
             yield message.event_body
             await self.mark_event_as_handled(
                 message.event_body, guarantee=Guarantee.EXACTLY_ONCE
             )
+            await work_unit.commit()
         message.acknowledge()
 
     @asynccontextmanager
