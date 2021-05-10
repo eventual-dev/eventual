@@ -4,11 +4,13 @@ import anyio
 from anyio.abc import TaskGroup
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 
+from eventual.broker import MessageBroker
 from eventual.concurrent.dispatcher import ConcurrentMessageDispatcher
 from eventual.concurrent.event_send_store import ConcurrentEventSendStore
-from eventual.dispatch.abc import WU, EventReceiveStore, HandlerRegistry, MessageBroker
+from eventual.event_store import EventReceiveStore
 from eventual.model import EventBody
-from eventual.work_unit import WorkUnit
+from eventual.registry import HandlerRegistry
+from eventual.work_unit import WU, WorkUnit
 
 
 def eventual_concurrent_lifespan(
