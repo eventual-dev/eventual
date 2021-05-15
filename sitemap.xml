@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
-     <loc>None</loc>
-     <lastmod>2021-05-10</lastmod>
+     <loc>https://eventual-dev.github.io/eventual/</loc>
+     <lastmod>2021-05-15</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
-     <loc>None</loc>
-     <lastmod>2021-05-10</lastmod>
+     <loc>https://eventual-dev.github.io/eventual/getting_started/work_unit/</loc>
+     <lastmod>2021-05-15</lastmod>
      <changefreq>daily</changefreq>
     </url><url>
-     <loc>None</loc>
-     <lastmod>2021-05-10</lastmod>
+     <loc>https://eventual-dev.github.io/eventual/design_and_internals/placeholder/</loc>
+     <lastmod>2021-05-15</lastmod>
+     <changefreq>daily</changefreq>
+    </url><url>
+     <loc>https://eventual-dev.github.io/eventual/reference/placeholder/</loc>
+     <lastmod>2021-05-15</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
