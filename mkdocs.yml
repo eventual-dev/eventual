@@ -1,6 +1,47 @@
+# Project information
 site_name: Eventual
+site_url: https://eventual-dev.github.io/eventual/
+site_author: Ivan Dmitrievsky
+
+# Repository
+repo_name: eventual-dev/eventual
+repo_url: https://github.com/eventual-dev/eventual
+
+# Copyright
+copyright: Copyright &copy; 2021 - 2021 Ivan Dmitrievsky
+
+# Configuration
+theme:
+  name: material
+
+  features:
+    - navigation.sections
+    - navigation.tabs
+
+# Plugins
+plugins:
+  - search
+
+# Customization
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/eventual-dev
+
+# Extensions
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - toc:
+      permalink: true
+
 nav:
-    - Home: index.md
-    - Guarantees: guarantees.md
-    - Retry Behavior: retry_behavior.md
-theme: material
+  - Home: index.md
+  - Getting started:
+      - Unit of work: getting_started/work_unit.md
+  - Design and internals:
+    - Placeholder: design_and_internals/placeholder.md
+  - Reference:
+    - Placeholder: reference/placeholder.md
