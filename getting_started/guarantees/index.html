@@ -11,14 +11,14 @@
         <meta name="author" content="Ivan Dmitrievsky">
       
       
-        <link rel="canonical" href="https://eventual-dev.github.io/eventual/getting_started/work_unit/">
+        <link rel="canonical" href="https://eventual-dev.github.io/eventual/getting_started/guarantees/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.3">
     
     
       
-        <title>Unit of work - Eventual</title>
+        <title>Guarantees - Eventual</title>
       
     
     
@@ -62,11 +62,6 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
-        
-        <a href="#unit-of-work" class="md-skip">
-          Skip to content
-        </a>
-      
     </div>
     <div data-md-component="announce">
       
@@ -93,7 +88,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Unit of work
+              Guarantees
             
           </span>
         </div>
@@ -173,15 +168,13 @@
         
   
   
-    
-  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="./" class="md-tabs__link md-tabs__link--active">
+      <a href="../work_unit/" class="md-tabs__link">
         Getting started
       </a>
     </li>
@@ -285,14 +278,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
       
       <label class="md-nav__link" for="__nav_2">
         Getting started
@@ -308,72 +299,11 @@
             
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Unit of work
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../work_unit/" class="md-nav__link">
         Unit of work
       </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#creating-units-of-work" class="md-nav__link">
-    Creating units of work
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#committing-work" class="md-nav__link">
-    Committing work
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#interrupting-work" class="md-nav__link">
-    Interrupting work
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checking-if-unit-of-work-was-committed" class="md-nav__link">
-    Checking if unit of work was committed
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -475,158 +405,19 @@
               </div>
             
             
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#creating-units-of-work" class="md-nav__link">
-    Creating units of work
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#committing-work" class="md-nav__link">
-    Committing work
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#interrupting-work" class="md-nav__link">
-    Interrupting work
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#checking-if-unit-of-work-was-committed" class="md-nav__link">
-    Checking if unit of work was committed
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/eventual-dev/eventual/edit/master/docs/getting_started/work_unit.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/eventual-dev/eventual/edit/master/docs/getting_started/guarantees.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="unit-of-work">Unit of work<a class="headerlink" href="#unit-of-work" title="Permanent link">&para;</a></h1>
-<p>Unit of work is an abstraction that represents an atomic operation – something that either happens entirely (as a unit)
-or does not happen at all. If you are familiar with database transactions then you are already familiar with the concept
-of unit of work.</p>
-<p>It's useful to define such an abstraction because it gives way to multiple implementations,
-which makes the concept more broad than just a database transaction. Unit of work can represent
-any kind of work, not just saving data to disk. A particular implementation can even have semantics
-that slightly differ from a transaction in its traditional sense.</p>
-<h2 id="creating-units-of-work">Creating units of work<a class="headerlink" href="#creating-units-of-work" title="Permanent link">&para;</a></h2>
-<p>A natural way to define a unit of work in Python is via a context manager. Every implementation of <code>WorkUnit</code> has
-a context manager that yields a unit of work instance upon entry:</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
-    <span class="o">...</span>
-</code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The code above will not work as is, because <code>WorkUnit</code> is an abstract class. You will have to use
-an implementation that suits your use case, e.g. <a href="https://github.com/eventual-dev/eventual-tortoise">eventual-tortoise</a>.</p>
-</div>
-<p>Be careful about creating nested units of work:</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
-    <span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">sub_work_unit</span><span class="p">:</span>
-        <span class="o">...</span>
-</code></pre></div>
-<p>Each particular implementation is free to handle such usages differently. Generally speaking, think twice about what
-you are trying to achieve with nesting.</p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>Chances are your application does not have a clear <a href="../../design_and_internals/placeholder/">layered structure</a>,
-which can lead to messy and rigid code.</p>
-</div>
-<h2 id="committing-work">Committing work<a class="headerlink" href="#committing-work" title="Permanent link">&para;</a></h2>
-<p>Here is how you commit your unit of work: </p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
-    <span class="o">...</span>
-    <span class="k">async</span> <span class="n">work_unit</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
-    <span class="o">...</span>
-</code></pre></div>
-<p>All this does is actually marks your unit of work to be committed upon the exit from the context manager. This
-means that the call doesn't have to be the last thing you do in the context manager block and that
-the operation is idempotent (doing it any number of times is the same as doing it once).</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Nothing is committed by default. You have to explicitly signify that you want to commit a unit of work.</p>
-</div>
-<p>If an unhandled exception reaches the unit of work context manager then work will not be committed.
-This can happen for a number of reasons including you raising an exception or a particular <code>WorkUnit</code> implementation
-failing to actually commit the work. Any such exceptions are reraised for you to deal with them.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The context manager block shouldn't contain anything but work compatible with the
-unit of work implementation you are using. Other operations can not be properly rolled back,
-and the abstraction fails.</p>
-<p>If you have some kind of retry logic in place, units of work can also contain idempotent operations.</p>
-</div>
-<h2 id="interrupting-work">Interrupting work<a class="headerlink" href="#interrupting-work" title="Permanent link">&para;</a></h2>
-<p>You can explicitly interrupt a unit of work by raising a <code>InterruptWork</code> exception:</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
-    <span class="o">...</span>
-    <span class="k">raise</span> <span class="n">InterruptWork</span>
-    <span class="o">...</span>
-</code></pre></div>
-<p>This exception is special,
-because it's suppressed by the unit of work context manager. Suppressing this exception in your code
-can lead to unwanted work being committed, so always reraise it.</p>
-<p>You can interrupt a unit of work by rolling it back:</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
-    <span class="o">...</span>
-    <span class="k">async</span> <span class="n">work_unit</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
-    <span class="o">...</span>
-</code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Rolling back is equivalent to raising <code>InterruptWork</code>. In fact, this is how rolling back works, so anything
-that comes after it in the context manager block is not executed.</p>
-</div>
-<h2 id="checking-if-unit-of-work-was-committed">Checking if unit of work was committed<a class="headerlink" href="#checking-if-unit-of-work-was-committed" title="Permanent link">&para;</a></h2>
-<p>After the context manager block is over you can check if work was successfully committed or not:</p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
-    <span class="o">...</span>
-    <span class="k">async</span> <span class="n">work_unit</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
-    <span class="o">...</span>
-
-<span class="k">assert</span> <span class="ow">not</span> <span class="n">work_unit</span><span class="o">.</span><span class="n">committed</span>
-</code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Checking if unit of work was committed inside the context manager block always returns <code>False</code>.</p>
-</div>
+                  <h1>Guarantees</h1>
+                
+                
                 
               
               
@@ -642,39 +433,6 @@ that comes after it in the context manager block is not executed.</p>
       
         
 <footer class="md-footer">
-  
-    <nav class="md-footer__inner md-grid" aria-label="Footer">
-      
-        <a href="../.." class="md-footer__link md-footer__link--prev" rel="prev">
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-          </div>
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              Home
-            </div>
-          </div>
-        </a>
-      
-      
-        <a href="../../design_and_internals/placeholder/" class="md-footer__link md-footer__link--next" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Placeholder
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-          </div>
-        </a>
-      
-    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
