@@ -6,7 +6,7 @@ of unit of work.
 
 It's useful to define such an abstraction because it gives way to multiple implementations,
 which makes the concept more broad than just a database transaction. Unit of work can represent
-any kind of work (not necessarily involving saving data to disk). A particular implementation can even have semantics
+any kind of work, not just saving data to disk. A particular implementation can even have semantics
 that slightly differ from a transaction in its traditional sense.
 
 ## Creating units of work
@@ -56,9 +56,16 @@ the operation is idempotent (doing it any number of times is the same as doing i
 !!! warning
     Nothing is committed by default. You have to explicitly signify that you want to commit a unit of work.
 
-If an unhandled exception reached the unit of work context manager then work will not be committed.
+If an unhandled exception reaches the unit of work context manager then work will not be committed.
 This can happen for a number of reasons including you raising an exception or a particular `WorkUnit` implementation
 failing to actually commit the work. Any such exceptions are reraised for you to deal with them.
+
+!!! warning
+    The context manager block shouldn't contain anything but work compatible with the
+    unit of work implementation you are using. Other operations can not be properly rolled back,
+    and the abstraction fails.
+
+    If you have some kind of retry logic in place, units of work can also contain idempotent operations.
 
 ## Interrupting work
 
@@ -85,7 +92,7 @@ async with WorkUnit.create() as work_unit:
 ```
 
 !!! note
-    Rolling back is equivalent to raising `InterruptWork`, in fact, it is how rolling back works, so anything
+    Rolling back is equivalent to raising `InterruptWork`. In fact, this is how rolling back works, so anything
     that comes after it in the context manager block is not executed.
 
 ## Checking if unit of work was committed
@@ -102,5 +109,4 @@ assert not work_unit.committed
 ```
 
 !!! warning
-    Checking if unit of work was committed inside the context manager block doesn't make sense and is discouraged.
-    The return value of the check is undefined.
+    Checking if unit of work was committed inside the context manager block always returns `False`.
