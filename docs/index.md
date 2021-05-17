@@ -1,4 +1,7 @@
-# Eventual
+# Rationale
+
+- reactive
+- uncoupling
 
 Eventual aims to provide strong guarantees while being safe and easy to use.
 
