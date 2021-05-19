@@ -40,23 +40,8 @@ you are trying to achieve with nesting.
 
 ## Committing work
 
-Here is how you commit your unit of work: 
-
-``` python
-async with WorkUnit.create() as work_unit:
-    ...
-    async work_unit.commit()
-    ...
-```
-
-All this does is actually marks your unit of work to be committed upon the exit from the context manager. This
-means that the call doesn't have to be the last thing you do in the context manager block and that
-the operation is idempotent (doing it any number of times is the same as doing it once).
-
-!!! warning
-    Nothing is committed by default. You have to explicitly signify that you want to commit a unit of work.
-
-If an unhandled exception reaches the unit of work context manager then work will not be committed.
+A unit of work is committed upon the exit from the context manager. If an unhandled exception reaches
+the unit of work context manager then work will not be committed.
 This can happen for a number of reasons including you raising an exception or a particular `WorkUnit` implementation
 failing to actually commit the work. Any such exceptions are reraised for you to deal with them.
 
@@ -64,12 +49,13 @@ failing to actually commit the work. Any such exceptions are reraised for you to
     The context manager block shouldn't contain anything but work compatible with the
     unit of work implementation you are using. Other operations can not be properly rolled back,
     and the abstraction fails.
-
-    If you have some kind of retry logic in place, units of work can also contain idempotent operations.
+    
+    If you have some kind of retry logic in place and you are sure that commit will eventually happen, then it should
+    be fine to perform idempotent operations inside the block.
 
 ## Interrupting work
 
-You can explicitly interrupt a unit of work by raising a `InterruptWork` exception:
+You can explicitly interrupt a unit of work by raising an `InterruptWork` exception:
 
 ``` python
 async with WorkUnit.create() as work_unit:
@@ -82,7 +68,7 @@ This exception is special,
 because it's suppressed by the unit of work context manager. Suppressing this exception in your code
 can lead to unwanted work being committed, so always reraise it.
 
-You can interrupt a unit of work by rolling it back:
+Another way to interrupt a unit of work is to roll it back:
 
 ``` python
 async with WorkUnit.create() as work_unit:

@@ -1,8 +1,7 @@
 import uuid
 from typing import Dict, Generic, Iterable, Optional, TypeVar
 
-from eventual.model import Entity
-from eventual.repository import (
+from eventual.abc.repository import (
     RepositoryAllMixin,
     RepositoryCountMixin,
     RepositoryCreateMixin,
@@ -10,6 +9,7 @@ from eventual.repository import (
     RepositoryGetMixin,
     RepositoryUpdateMixin,
 )
+from eventual.model import Entity
 
 M = TypeVar("M", bound=Entity)
 

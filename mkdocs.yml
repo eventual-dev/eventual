@@ -41,7 +41,9 @@ nav:
   - Home: index.md
   - Getting started:
       - Unit of work: getting_started/unit_of_work.md
-      - Change, events and outboxes: getting_started/change_events_and_outboxes.md
+      - Entities and events: getting_started/entities_and_events.md
+      - Broker: getting_started/broker.md
+      - Event stores: getting_started/event_stores.md
   - Design and internals:
     - Placeholder: design_and_internals/placeholder.md
   - Reference:

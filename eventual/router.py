@@ -1,50 +1,49 @@
-from typing import AsyncContextManager
+from typing import Any, AsyncContextManager
 
 from anyio.abc import TaskGroup
 
-from eventual.broker import Message, MessageBroker
-from eventual.dispatcher import MessageDispatcher
-from eventual.event_store import EventReceiveStore, EventSendStore, Guarantee
-from eventual.model import EventBody
+from eventual.abc.broker import Message, MessageBroker
+from eventual.abc.guarantee import Guarantee
+from eventual.abc.router import IntegrityGuard, MessageRouter
+from eventual.abc.schedule import EventScheduler
+from eventual.abc.work_unit import WU
+from eventual.model import EventPayload
 from eventual.registry import HandlerRegistry, MessageHandler
-from eventual.work_unit import WU, WorkUnit
 
 
 def _manager_from_guarantee(
-    msg: Message, event_store: EventReceiveStore, guarantee: Guarantee
-) -> AsyncContextManager[EventBody]:
+    msg: Message, integrity_guard: IntegrityGuard[Any], guarantee: Guarantee
+) -> AsyncContextManager[EventPayload]:
     if guarantee == guarantee.AT_LEAST_ONCE:
-        return event_store.handle_at_least_once(msg)
+        return integrity_guard.handle_at_least_once(msg)
     if guarantee == guarantee.EXACTLY_ONCE:
-        return event_store.handle_exactly_once(msg)
+        return integrity_guard.handle_exactly_once(msg)
     if guarantee == guarantee.NO_MORE_THAN_ONCE:
-        return event_store.handle_no_more_than_once(msg)
+        return integrity_guard.handle_no_more_than_once(msg)
     raise AssertionError("there are no more guarantees")
 
 
 async def _handle_with_retry(
-    event_receive_store: EventReceiveStore[WorkUnit],
-    event_send_store: EventSendStore[WU],
+    integrity_guard: IntegrityGuard[WU],
+    scheduler: EventScheduler[WU],
     fn: MessageHandler[WU],
     message: Message,
     guarantee: Guarantee,
     delay_on_exc: float,
 ) -> None:
-    # Receive store and send store can be two completely different stores,
-    # so ReceiveStore is bounded only by WorkUnit.
     try:
-        async with _manager_from_guarantee(message, event_receive_store, guarantee):
-            await fn(message, event_send_store)
+        async with _manager_from_guarantee(message, integrity_guard, guarantee):
+            await fn(message, scheduler)
     except Exception:
-        await event_send_store.schedule_event_to_be_sent(
-            message.event_body,
+        await scheduler.schedule_event(
+            message.event_payload,
             delay=delay_on_exc,
         )
         message.acknowledge()
         raise
 
 
-class ConcurrentMessageDispatcher(MessageDispatcher):
+class Router(MessageRouter):
     def __init__(
         self,
         task_group: TaskGroup,
@@ -55,17 +54,15 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
         self,
         handler_registry: HandlerRegistry[WU],
         message_broker: MessageBroker,
-        event_receive_store: EventReceiveStore[WU],
-        event_send_store: EventSendStore[WU],
+        integrity_guard: IntegrityGuard[WU],
+        scheduler: EventScheduler[WU],
     ) -> None:
         handler_spec_from_subject = handler_registry.mapping()
         message_stream = message_broker.message_receive_stream()
 
         async for message in message_stream:
-            event_body = message.event_body
-
-            is_event_handled = await event_receive_store.is_event_handled(
-                message.event_id
+            is_event_handled = await integrity_guard.is_dispatch_forbidden(
+                message.event_payload.id
             )
             if is_event_handled:
                 # There is no guarantee that messages that we've marked as handled
@@ -75,18 +72,18 @@ class ConcurrentMessageDispatcher(MessageDispatcher):
                 message.acknowledge()
                 continue
 
-            handler_spec = handler_spec_from_subject.get(message.event_subject)
+            handler_spec = handler_spec_from_subject.get(message.event_payload.subject)
             if handler_spec is None:
                 continue
 
             # We save every event that we attempt to dispatch, not every event we receive,
             # because we can get a lot of events that we do not care about.
-            await event_receive_store.mark_event_as_dispatched(event_body)
+            await integrity_guard.record_dispatch_attempt(message.event_payload)
 
             self.task_group.start_soon(
                 _handle_with_retry,
-                event_receive_store,
-                event_send_store,
+                integrity_guard,
+                scheduler,
                 handler_spec.message_handler,
                 message,
                 handler_spec.guarantee,

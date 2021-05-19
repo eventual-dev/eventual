@@ -1,4 +1,4 @@
 from .entity import Entity
-from .event import Event, EventBody
+from .event import Event, EventPayload
 
-__all__ = ["Entity", "Event", "EventBody"]
+__all__ = ["Entity", "Event", "EventPayload"]

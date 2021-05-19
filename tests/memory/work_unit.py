@@ -1,12 +1,12 @@
 import contextlib
 from typing import AsyncGenerator, Type
 
-from eventual.work_unit import InterruptWork, WorkUnit
+from eventual.abc.work_unit import InterruptWork, WorkUnit
 
 
 class MemoryWorkUnit(WorkUnit):
     def __init__(self) -> None:
-        self._commit = False
+        self._committed = False
 
     @classmethod
     @contextlib.asynccontextmanager
@@ -16,14 +16,14 @@ class MemoryWorkUnit(WorkUnit):
         work_unit = MemoryWorkUnit()
         try:
             yield work_unit
-            if not work_unit._commit:
+            if not work_unit._committed:
                 raise InterruptWork
         except InterruptWork:
-            work_unit._commit = False
+            work_unit._committed = False
 
     async def commit(self) -> None:
-        self._commit = True
+        self._committed = True
 
     @property
     def committed(self) -> bool:
-        return self._commit
+        return self._committed

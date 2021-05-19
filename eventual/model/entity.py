@@ -1,27 +1,16 @@
+"""
+An implementation of the DDD entity concept.
+"""
 import abc
 import typing
 from collections import deque
 
 from .event import Event
 
-# If a new class inherits from any ABC, then the new class's metaclass has to
-# inherit from ABCMeta. If a new class inherits from typing.Generic, and
-# you're using Python 3.6, then the new class's metaclass has to
-# inherit from typing.GenericMeta. Some of the classes that want to use Final
-# or NoPublicConstructor inherit from ABCs and generics, so Final has to
-# inherit from these metaclasses. Fortunately, GenericMeta inherits from
-# ABCMeta, so inheriting from GenericMeta alone is sufficient (when it
-# exists at all).
-
-if not typing.TYPE_CHECKING and hasattr(typing, "GenericMeta"):
-    BaseMeta = typing.GenericMeta
-else:
-    BaseMeta = abc.ABCMeta
-
 T = typing.TypeVar("T")
 
 
-class NoPublicConstructor(BaseMeta):
+class NoPublicConstructor(abc.ABCMeta):
     """Metaclass that enforces a class to be final (i.e., subclass not allowed)
     and ensures a private constructor.
 

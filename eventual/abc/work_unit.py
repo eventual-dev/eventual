@@ -1,5 +1,5 @@
 """
-A Python variation of the abstraction often called "unit of work".
+An implementation of the abstraction often called "unit of work".
 """
 import abc
 from typing import AsyncContextManager, Type, TypeVar
@@ -22,9 +22,7 @@ class WorkUnit(abc.ABC):
     should be created via the `WorkUnit.create()` context manager. Any work contained in the block is considered part
     of the work unit. What exactly constitutes work should be clear from the context.
 
-    Nothing should be committed by default. Work is committed upon exit from the block only if:
-     - `work_unit.commit()` was called
-     - `InterruptWork` was not raised inside the block.
+    Work is committed upon exit from the block only if no exceptions were raised inside the block.
     """
 
     @classmethod
@@ -37,19 +35,6 @@ class WorkUnit(abc.ABC):
 
         Returns:
             A context manager that produces a work unit upon entry and commits work upon exit.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    async def commit(self) -> None:
-        """
-        Communicates that the work contained in the block should be committed upon exit from the block.
-
-        The work includes everything in the block, before and after the `.commit()`. If `InterruptWork` is raised
-        before the block is over then work is not committed.
-
-        Returns:
-            None.
         """
         raise NotImplementedError
 
