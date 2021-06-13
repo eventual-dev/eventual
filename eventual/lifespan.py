@@ -20,9 +20,10 @@ def default_lifespan(
     event_payload_stream_pair: Tuple[
         MemoryObjectSendStream[EventPayload], MemoryObjectReceiveStream[EventPayload]
     ],
-    event_schedule:  EventSchedule[WU],
+    event_schedule: EventSchedule[WU],
     scheduler_factory: Callable[
-        [MemoryObjectSendStream[EventPayload], EventSchedule[WU], TaskGroup], Scheduler[WU]
+        [MemoryObjectSendStream[EventPayload], EventSchedule[WU], TaskGroup],
+        Scheduler[WU],
     ],
     router_factory: Callable[[TaskGroup], Router],
 ) -> Callable:
@@ -32,7 +33,9 @@ def default_lifespan(
         async with anyio.create_task_group() as callback_group:
             async with anyio.create_task_group() as background_group:
                 router = router_factory(callback_group)
-                scheduler = scheduler_factory(event_payload_send_stream, event_schedule, callback_group)
+                scheduler = scheduler_factory(
+                    event_payload_send_stream, event_schedule, callback_group
+                )
 
                 background_group.start_soon(
                     router.dispatch_from_broker,
