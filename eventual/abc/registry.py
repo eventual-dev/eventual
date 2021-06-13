@@ -1,6 +1,12 @@
 import abc
 import dataclasses
-from typing import Awaitable, Callable, Generic, List, Mapping, Protocol
+import sys
+from typing import Awaitable, Callable, Generic, List, Mapping
+
+if sys.version_info < (3, 8):
+    from typing import Protocol
+else:
+    from typing_extensions import Protocol
 
 from .broker import Message
 from .router import Guarantee

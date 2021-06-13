@@ -811,7 +811,7 @@ tortoise = ["eventual-tortoise"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "3d5c3a8ae8e82f1410cca4b306f04ac033df0cda22b7289d6e70a8a98e8f8cd3"
+content-hash = "a1d8305b57f8215bad4bf9a2a56035bde82a62d68ee963d10b99fc19adb8ce82"
 
 [metadata.files]
 aio-pika = [
