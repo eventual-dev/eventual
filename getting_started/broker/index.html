@@ -11,21 +11,21 @@
         <meta name="author" content="Ivan Dmitrievsky">
       
       
-        <link rel="canonical" href="https://eventual-dev.github.io/eventual/getting_started/change_events_and_outboxes/">
+        <link rel="canonical" href="https://eventual-dev.github.io/eventual/getting_started/broker/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.3">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.8">
     
     
       
-        <title>Change, events and outboxes - Eventual</title>
+        <title>Broker - Eventual</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.e35208c4.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ca7ac06f.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ef6f36e2.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
         
       
     
@@ -42,6 +42,8 @@
     
     
       
+
+
     
     
   </head>
@@ -63,7 +65,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#change-events-and-outboxes" class="md-skip">
+        <a href="#broker-and-messages" class="md-skip">
           Skip to content
         </a>
       
@@ -93,7 +95,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Change, events and outboxes
+              Broker
             
           </span>
         </div>
@@ -320,6 +322,18 @@
             
   
   
+  
+    <li class="md-nav__item">
+      <a href="../entities_and_events/" class="md-nav__link">
+        Entities and events
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
     
   
   
@@ -331,10 +345,59 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Broker
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
-        Change, events and outboxes
+        Broker
       </a>
       
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#messages" class="md-nav__link">
+    Messages
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#brokers" class="md-nav__link">
+    Brokers
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../event_stores/" class="md-nav__link">
+        Event stores
+      </a>
     </li>
   
 
@@ -448,6 +511,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#messages" class="md-nav__link">
+    Messages
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#brokers" class="md-nav__link">
+    Brokers
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -458,41 +543,29 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/eventual-dev/eventual/edit/master/docs/getting_started/change_events_and_outboxes.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/eventual-dev/eventual/edit/master/docs/getting_started/broker.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="change-events-and-outboxes">Change, events and outboxes<a class="headerlink" href="#change-events-and-outboxes" title="Permanent link">&para;</a></h1>
-<p>Any event, once it happened, can not change, because it is in the past. Hence, it's very convenient to model events
-as instances of a frozen dataclass. Every event is uniquely identifiable by an id and carries a
-<code>occured_on</code> timestamp in UTC.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
-
-<span class="kn">from</span> <span class="nn">eventual.model</span> <span class="kn">import</span> <span class="n">Event</span>
-
-
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">EmailChanged</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-    <span class="k">pass</span>
-</code></pre></div>
-<p>Events are a product of change. Things that change in a meaningful way have an identity. The identity conceptually links
-the series of values into one changing thing. In domain-driven design things with identity are known as entities.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">eventual.model</span> <span class="kn">import</span> <span class="n">Entity</span>
-
-
-<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
-    <span class="k">pass</span>
-</code></pre></div>
-<p>We often want to react to a particular entity changing. For that purpose entities have outboxes they put events in. </p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">eventual.model</span> <span class="kn">import</span> <span class="n">Entity</span>
-
-
-<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Entity</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">change_email</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="o">...</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_outbox</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">EmailChanged</span><span class="p">())</span>
-</code></pre></div>
+                <h1 id="broker-and-messages">Broker and messages<a class="headerlink" href="#broker-and-messages" title="Permanent link">&para;</a></h1>
+<p>To reliably exchange events over the network we need a broker. Broker can receive and forward messages that are usually
+represented as bytes. If we can encode an event object as bytes then broker can receive and forward events.</p>
+<h2 id="messages">Messages<a class="headerlink" href="#messages" title="Permanent link">&para;</a></h2>
+<p>Messages are events encoded in a particular way. You can do two things with a message:</p>
+<ul>
+<li>decode its contents</li>
+<li>acknowledge it</li>
+</ul>
+<p>A message is never decoded into an instance of a particular event that it was produced from. The receiving side doesn't
+know anything about code organization of the sender. How do you know what event is represented by a message then? There
+is a special <code>subject</code> property which is derived from a class name. For example, a message that encodes a
+<code>MoneyReceived</code> event has a <code>"money-received"</code> subject.</p>
+<h2 id="brokers">Brokers<a class="headerlink" href="#brokers" title="Permanent link">&para;</a></h2>
+<p>A broker can do two things:
+- push messages to the receiver
+- send messages from the sender (with a confirmation for each one)</p>
+<p>In <code>eventual</code> every message is guaranteed to be sent to the broker at least once.</p>
                 
               
               
@@ -511,7 +584,8 @@ the series of values into one changing thing. In domain-driven design things wit
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="../unit_of_work/" class="md-footer__link md-footer__link--prev" rel="prev">
+        
+        <a href="../entities_and_events/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Entities and events" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -520,19 +594,20 @@ the series of values into one changing thing. In domain-driven design things wit
               <span class="md-footer__direction">
                 Previous
               </span>
-              Unit of work
+              Entities and events
             </div>
           </div>
         </a>
       
       
-        <a href="../../design_and_internals/placeholder/" class="md-footer__link md-footer__link--next" rel="next">
+        
+        <a href="../event_stores/" class="md-footer__link md-footer__link--next" aria-label="Next: Event stores" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Placeholder
+              Event stores
             </div>
           </div>
           <div class="md-footer__button md-icon">
@@ -578,10 +653,10 @@ the series of values into one changing thing. In domain-driven design things wit
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.tabs"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.fe42c31b.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.tabs"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.b0710199.min.js", "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.4ea5477f.min.js"></script>
+      <script src="../../assets/javascripts/bundle.76f349be.min.js"></script>
       
     
   </body>

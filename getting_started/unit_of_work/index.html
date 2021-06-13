@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://eventual-dev.github.io/eventual/getting_started/unit_of_work/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.3">
+      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.8">
     
     
       
@@ -22,10 +22,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.e35208c4.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ca7ac06f.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ef6f36e2.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
         
       
     
@@ -42,6 +42,8 @@
     
     
       
+
+
     
     
   </head>
@@ -383,8 +385,32 @@
   
   
     <li class="md-nav__item">
-      <a href="../change_events_and_outboxes/" class="md-nav__link">
-        Change, events and outboxes
+      <a href="../entities_and_events/" class="md-nav__link">
+        Entities and events
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../broker/" class="md-nav__link">
+        Broker
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../event_stores/" class="md-nav__link">
+        Event stores
       </a>
     </li>
   
@@ -582,20 +608,8 @@ you are trying to achieve with nesting.</p>
 which can lead to messy and rigid code.</p>
 </div>
 <h2 id="committing-work">Committing work<a class="headerlink" href="#committing-work" title="Permanent link">&para;</a></h2>
-<p>Here is how you commit your unit of work: </p>
-<div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
-    <span class="o">...</span>
-    <span class="k">async</span> <span class="n">work_unit</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
-    <span class="o">...</span>
-</code></pre></div>
-<p>All this does is actually marks your unit of work to be committed upon the exit from the context manager. This
-means that the call doesn't have to be the last thing you do in the context manager block and that
-the operation is idempotent (doing it any number of times is the same as doing it once).</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Nothing is committed by default. You have to explicitly signify that you want to commit a unit of work.</p>
-</div>
-<p>If an unhandled exception reaches the unit of work context manager then work will not be committed.
+<p>A unit of work is committed upon the exit from the context manager. If an unhandled exception reaches
+the unit of work context manager then work will not be committed.
 This can happen for a number of reasons including you raising an exception or a particular <code>WorkUnit</code> implementation
 failing to actually commit the work. Any such exceptions are reraised for you to deal with them.</p>
 <div class="admonition warning">
@@ -603,10 +617,11 @@ failing to actually commit the work. Any such exceptions are reraised for you to
 <p>The context manager block shouldn't contain anything but work compatible with the
 unit of work implementation you are using. Other operations can not be properly rolled back,
 and the abstraction fails.</p>
-<p>If you have some kind of retry logic in place, units of work can also contain idempotent operations.</p>
+<p>If you have some kind of retry logic in place and you are sure that commit will eventually happen, then it should
+be fine to perform idempotent operations inside the block.</p>
 </div>
 <h2 id="interrupting-work">Interrupting work<a class="headerlink" href="#interrupting-work" title="Permanent link">&para;</a></h2>
-<p>You can explicitly interrupt a unit of work by raising a <code>InterruptWork</code> exception:</p>
+<p>You can explicitly interrupt a unit of work by raising an <code>InterruptWork</code> exception:</p>
 <div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
     <span class="o">...</span>
     <span class="k">raise</span> <span class="n">InterruptWork</span>
@@ -615,7 +630,7 @@ and the abstraction fails.</p>
 <p>This exception is special,
 because it's suppressed by the unit of work context manager. Suppressing this exception in your code
 can lead to unwanted work being committed, so always reraise it.</p>
-<p>You can interrupt a unit of work by rolling it back:</p>
+<p>Another way to interrupt a unit of work is to roll it back:</p>
 <div class="highlight"><pre><span></span><code><span class="k">async</span> <span class="k">with</span> <span class="n">WorkUnit</span><span class="o">.</span><span class="n">create</span><span class="p">()</span> <span class="k">as</span> <span class="n">work_unit</span><span class="p">:</span>
     <span class="o">...</span>
     <span class="k">async</span> <span class="n">work_unit</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
@@ -657,7 +672,8 @@ that comes after it in the context manager block is not executed.</p>
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="../.." class="md-footer__link md-footer__link--prev" rel="prev">
+        
+        <a href="../.." class="md-footer__link md-footer__link--prev" aria-label="Previous: Home" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -672,13 +688,14 @@ that comes after it in the context manager block is not executed.</p>
         </a>
       
       
-        <a href="../change_events_and_outboxes/" class="md-footer__link md-footer__link--next" rel="next">
+        
+        <a href="../entities_and_events/" class="md-footer__link md-footer__link--next" aria-label="Next: Entities and events" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Change, events and outboxes
+              Entities and events
             </div>
           </div>
           <div class="md-footer__button md-icon">
@@ -724,10 +741,10 @@ that comes after it in the context manager block is not executed.</p>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.tabs"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.fe42c31b.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.tabs"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.b0710199.min.js", "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.4ea5477f.min.js"></script>
+      <script src="../../assets/javascripts/bundle.76f349be.min.js"></script>
       
     
   </body>
