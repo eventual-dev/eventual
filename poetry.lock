@@ -180,39 +180,29 @@ toml = ["toml"]
 
 [[package]]
 name = "eventual-rmq"
-version = "0.4.0"
+version = "0.3.0"
 description = ""
 category = "main"
 optional = true
-python-versions = "^3.7"
-develop = true
+python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
-aio-pika = "^6.8.0"
-eventual = "^0.6.0"
-orjson = "^3.5.2"
-
-[package.source]
-type = "directory"
-url = "../eventual-rmq"
+aio-pika = ">=6.8.0,<7.0.0"
+eventual = ">=0,<1"
+orjson = ">=3.5.2,<4.0.0"
 
 [[package]]
 name = "eventual-tortoise"
-version = "0.4.0"
+version = "0.2.0"
 description = ""
 category = "main"
 optional = true
-python-versions = "^3.7"
-develop = true
+python-versions = ">=3.7,<4.0"
 
 [package.dependencies]
-eventual = "^0"
-orjson = "^3.5.2"
-tortoise-orm = "^0.17.2"
-
-[package.source]
-type = "directory"
-url = "../eventual-tortoise"
+eventual = ">=0,<1"
+orjson = ">=3.5.2,<4.0.0"
+tortoise-orm = ">=0.17.2,<0.18.0"
 
 [[package]]
 name = "flake8"
@@ -375,7 +365,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "mkdocs"
-version = "1.2"
+version = "1.2.1"
 description = "Project documentation with Markdown."
 category = "dev"
 optional = false
@@ -398,7 +388,7 @@ i18n = ["babel (>=2.9.0)"]
 
 [[package]]
 name = "mkdocs-material"
-version = "7.1.7"
+version = "7.1.8"
 description = "A Material Design theme for MkDocs"
 category = "dev"
 optional = false
@@ -821,7 +811,7 @@ tortoise = ["eventual-tortoise"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "537627dbe773a28324ad91fb4f4bb4d1fe3c44022a52d1eede1adaace92e7387"
+content-hash = "c1f7663f5f1a72f01c0a3d5b3d8e1118fd447fd99190be8843ccaf8826c09416"
 
 [metadata.files]
 aio-pika = [
@@ -979,8 +969,14 @@ coverage = [
     {file = "coverage-5.5-pp37-none-any.whl", hash = "sha256:2a3859cb82dcbda1cfd3e6f71c27081d18aa251d20a17d87d26d4cd216fb0af4"},
     {file = "coverage-5.5.tar.gz", hash = "sha256:ebe78fe9a0e874362175b02371bdfbee64d8edc42a044253ddf4ee7d3c15212c"},
 ]
-eventual-rmq = []
-eventual-tortoise = []
+eventual-rmq = [
+    {file = "eventual-rmq-0.3.0.tar.gz", hash = "sha256:c5d70e8c2a98fc9b8e1a0468b883e7de18b4a4238c3551dfff6c60a52e4ac594"},
+    {file = "eventual_rmq-0.3.0-py3-none-any.whl", hash = "sha256:b8c63297b3d73c5786f3c6f8873a37bc6599cba4860b8507c7aff261aa8add59"},
+]
+eventual-tortoise = [
+    {file = "eventual-tortoise-0.2.0.tar.gz", hash = "sha256:1367d06a933d5874da4200bd2f0300811458ac458ead7dc3b0fffcfc9b87d705"},
+    {file = "eventual_tortoise-0.2.0-py3-none-any.whl", hash = "sha256:e220b6cb05e4b8aa8731efe4d64ecf6e4a317c10d8176622964802da28631cb8"},
+]
 flake8 = [
     {file = "flake8-3.9.2-py2.py3-none-any.whl", hash = "sha256:bf8fd333346d844f616e8d47905ef3a3384edae6b4e9beb0c5101e25e3110907"},
     {file = "flake8-3.9.2.tar.gz", hash = "sha256:07528381786f2a6237b061f6e96610a4167b226cb926e2aa2b6b1d78057c576b"},
@@ -1068,12 +1064,12 @@ mkautodoc = [
     {file = "mkautodoc-0.1.0.tar.gz", hash = "sha256:7c2595f40276b356e576ce7e343338f8b4fa1e02ea904edf33fadf82b68ca67c"},
 ]
 mkdocs = [
-    {file = "mkdocs-1.2-py3-none-any.whl", hash = "sha256:0a194e98f7c8e83b0f538ce3d1f2a903bdc3271e2038d5032f786c7b1ebf43aa"},
-    {file = "mkdocs-1.2.tar.gz", hash = "sha256:26118adefe1d311b306f14bc2fae313cffcddc2f724d498fb40c26473c7f0017"},
+    {file = "mkdocs-1.2.1-py3-none-any.whl", hash = "sha256:11141126e5896dd9d279b3e4814eb488e409a0990fb638856255020406a8e2e7"},
+    {file = "mkdocs-1.2.1.tar.gz", hash = "sha256:6e0ea175366e3a50d334597b0bc042b8cebd512398cdd3f6f34842d0ef524905"},
 ]
 mkdocs-material = [
-    {file = "mkdocs-material-7.1.7.tar.gz", hash = "sha256:34d57af1e3e68ff4251feb82ced70545d8aa6064861ba76b1a15928399d21879"},
-    {file = "mkdocs_material-7.1.7-py2.py3-none-any.whl", hash = "sha256:1725d02efed5d989258fd1620673e78a7171f82028f30c2da8d21e7539150221"},
+    {file = "mkdocs-material-7.1.8.tar.gz", hash = "sha256:e555c66ece5eab7023c4733270dc7627280e707e5082dab278d6a7a4881d2435"},
+    {file = "mkdocs_material-7.1.8-py2.py3-none-any.whl", hash = "sha256:08eaf9f77c6d026706397bae2c50d202cfe3a81ef984027b671b4acd365dfc5b"},
 ]
 mkdocs-material-extensions = [
     {file = "mkdocs-material-extensions-1.0.1.tar.gz", hash = "sha256:6947fb7f5e4291e3c61405bad3539d81e0b3cd62ae0d66ced018128af509c68f"},
