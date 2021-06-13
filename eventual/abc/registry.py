@@ -3,7 +3,7 @@ import dataclasses
 import sys
 from typing import Awaitable, Callable, Generic, List, Mapping
 
-if sys.version_info < (3, 8):
+if sys.version_info >= (3, 8):
     from typing import Protocol
 else:
     from typing_extensions import Protocol
