@@ -644,7 +644,7 @@ name = "pytz"
 version = "2021.1"
 description = "World timezone definitions, modern and historical"
 category = "main"
-optional = true
+optional = false
 python-versions = "*"
 
 [[package]]
@@ -811,7 +811,7 @@ tortoise = ["eventual-tortoise"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "c1f7663f5f1a72f01c0a3d5b3d8e1118fd447fd99190be8843ccaf8826c09416"
+content-hash = "3d5c3a8ae8e82f1410cca4b306f04ac033df0cda22b7289d6e70a8a98e8f8cd3"
 
 [metadata.files]
 aio-pika = [
